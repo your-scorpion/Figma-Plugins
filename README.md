@@ -1,3 +1,5 @@
+You can use all the plugins as ready-made builds here: https://www.figma.com/@tcvetkov 
+
 Below are the steps to get your plugin running. You can also find instructions at:
 
   https://www.figma.com/plugin-docs/setup/
