@@ -1,11 +1,8 @@
 figma.showUI(__html__,{width:300, height:384, title:"Pattern Line Generator"});
 //by Max Tcvetkov --- www.eng.your-scorpion.ru
 
-
-
 let randomN = 1.01 - 0.5 + Math.random() * (1 - 0.999); 
 let randomN2 = 8.12 - 0.75 + Math.random() * (1.04 - 1.46); 
-
 
 figma.ui.onmessage = msg => {
   if (msg.type === 'actionGenerate') {
@@ -44,7 +41,6 @@ figma.ui.onmessage = msg => {
           figma.closePlugin('Done nicely!')
        }
 
-
     linesFrame.layoutMode = "HORIZONTAL";
     linesFrame.layoutAlign = "STRETCH";
     linesFrame.primaryAxisAlignItems = 'SPACE_BETWEEN';
@@ -53,16 +49,11 @@ figma.ui.onmessage = msg => {
     linesFrame.paddingRight = 24;
     linesFrame.paddingLeft = 24;
     linesFrame.paddingTop = 24;
-    linesFrame.itemSpacing = Math.random() * spacing
-
-   
+    linesFrame.itemSpacing = Math.random() * spacing  
   }
-
-
 
   else if (msg.type === 'actionExit') {
     figma.closePlugin('See you soon 🎨')
-
   }
 }
 
