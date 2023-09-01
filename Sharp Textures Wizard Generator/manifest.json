@@ -1,0 +1,8 @@
+{
+  "name": "Sharp Textures Wizard Generator",
+  "id": "0",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma", "figjam"]
+}
