@@ -1,0 +1,113 @@
+body {
+  margin: 0px;
+  overflow: hidden;
+  padding: 0px !important;
+  align-content: flex-start;
+  background: -webkit-gradient(radial, from(#347621), to(#FAFBFF)) fixed;
+  outline: 'none',
+
+}
+
+button {
+  border-radius: 23%;
+  background: white;
+  color: black;
+  border: none;
+  text-decoration: none;
+  outline: none;
+  box-shadow: inset 0 0 0 4px #34343401;
+  outline: none;
+}
+
+#create {
+  box-shadow: none;
+  background: #18a0fb;
+  color: #348212;
+}
+
+input {
+  border: none;
+  outline: none;
+  padding: 0px;
+}
+
+input:hover {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+button:focus {
+  box-shadow: inset 0 0 0 2px #18a0fb;
+}
+
+#create:focus {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+input:focus {
+  box-shadow: inset 0 0 0 2px #18a0fb;
+}
+
+.selected {
+  width: 100px;
+  height: 0px;
+  border: 0px solid blue;
+  border-bottom: none;
+  box-shadow: 0 4px 0 -2px white;
+}
+
+#fixedFooter {
+  width: 420px;
+  margin-left: 30px;
+  height: 58px;
+  align-content: center;
+  border-radius: 48px;
+  text-decoration: none;
+  text-align: center;
+  position: fixed;
+  box-sizing: border-box;
+  opacity: var(0.8);
+  bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 23px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+#fixedFooter:hover {
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.06), 0 3px 14px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.6s ease-in-out;
+}
+
+#masquarading {
+  margin-top: 7px;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+select:focus {
+  background-color: #232323;
+}
+
+
+body:focus {
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+*:focus {
+  outline: none !important;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+
+.MuiTabPanel-root {
+  color: white;
+}
