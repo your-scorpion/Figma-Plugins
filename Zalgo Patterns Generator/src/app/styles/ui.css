@@ -1,0 +1,122 @@
+body {
+    font: 12px sans-serif;
+    text-align: center;
+    margin: 20px;
+    overflow: hidden;
+}
+
+button {
+    border-radius: 5px;
+    background: white;
+    color: black;
+    border: none;
+    padding: 8px 15px;
+    margin: 0 5px;
+    box-shadow: inset 0 0 0 1px black;
+    outline: none;
+}
+
+#create {
+    box-shadow: none;
+    background: #18a0fb;
+    color: white;
+}
+
+input {
+    border: none;
+    outline: none;
+    padding: 8px;
+}
+
+input:hover {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+button:focus {
+    box-shadow: inset 0 0 0 2px #18a0fb;
+}
+
+#create:focus {
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+input:focus {
+    box-shadow: rgba(254, 205, 211, 0.1) 0px 4px 16px, rgba(254, 205, 211, 0.1) 0px 8px 24px, rgba(254, 205, 211, 0.1) 0px 16px 56px;
+}
+
+.footer {
+    z-index: 99999;
+    position: fixed;
+    left: 0;
+
+    background-color: white;
+    bottom: 0;
+    width: 100%;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
+}
+
+.gradient-shadow {
+
+
+    border-radius: 33px;
+    margin-left: 15px;
+    margin-right: -15px;
+    margin-bottom: 15px;
+    width: 360px;
+    background: linear-gradient(75deg, #eff5f5, #f3f3f3);
+    box-shadow: 0px 3px 8px #aaa,
+}
+
+.header {
+    color: #00000099;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.4375em;
+    letter-spacing: 0.00938em;
+    text-align: left;
+    padding-left: 18px;
+}
+
+.passPas {
+    padding: 13px;
+}
+
+.textarea {
+    background-color: #fff;
+    color: #666666;
+    padding: 1em;
+    border-radius: 4px;
+    border: 1px solid #c4c4c4;
+    outline: none;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.4;
+    width: 200px;
+    height: 100px;
+
+}
+
+.textarea:hover {
+    cursor: pointer;
+    background-color: #fafafa;
+}
+
+.textarea:focus {
+    cursor: text;
+    color: #333333;
+    background-color: white;
+    border-color: #333333;
+}
+
+.experiment_with {
+    background-color: #ffffff !important;
+    color: #4a4343 !important;
+    border-color: #4a4343 !important;
+    border-radius: 55px !important;
+}
+
+.experiment_with2 {
+    border-radius: 55px !important;
+}
