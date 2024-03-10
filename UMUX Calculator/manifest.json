@@ -1,8 +1,12 @@
 {
   "name": "UMUX Calculator",
-  "id": "0",
+  "id": 0000
   "api": "1.0.0",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
   "main": "dist/code.js",
+  "documentAccess": "dynamic-page",
   "ui": "dist/ui.html",
   "editorType": ["figma", "figjam"]
 }

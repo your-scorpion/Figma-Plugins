@@ -6,7 +6,7 @@ function SecondPopover() {
   const popupState = usePopupState({ variant: 'popover', popupId: 'demoPopover' });
 
   return (
-    <div>
+    <div> 
       <Button {...bindTrigger(popupState)}>Open Popover</Button>
       <Popover
         {...bindPopover(popupState)}

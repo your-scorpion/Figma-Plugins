@@ -1,7 +1,7 @@
 {
   "name": "UMUX Calculator",
   "version": "1.0.0",
-  "description": "-",
+  "description": "This plugin template uses Typescript. If you are familiar with Javascript, Typescript will look very familiar. In fact, valid Javascript code is already valid Typescript code.",
   "license": "ISC",
   "scripts": {
     "build": "webpack --mode=production",
