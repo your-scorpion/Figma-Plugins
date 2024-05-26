@@ -1,0 +1,161 @@
+body {
+  font: 12px sans-serif;
+  text-align: center;
+  margin: 20px;
+  background-color: #EAEAEA;
+  height: 100%;
+  overflow: hidden;
+}
+button {
+  border-radius: 5px;
+  background: white;
+  color: black;
+  border: none;
+  padding: 8px 15px;
+  margin: 0 5px;
+  /*box-shadow: inset 0 0 0 1px black;*/
+  outline: none;
+}
+#create {
+  box-shadow: none;
+  background: #18a0fb;
+  color: white;
+}
+input {
+  border: none;
+  outline: none;
+  padding: 8px;
+}
+input:hover {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+} 
+
+#create:focus {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.exper {
+  scale: 2;
+}
+
+.ddss {
+  font-size: 0.875rem;
+  padding-top: 8px;
+  margin-left: -259px;
+  font-weight: 500;
+  color: #A2A4A6;
+}
+.spacer {
+  margin-left: 10px;
+}
+.djsokkajdasjk {
+  padding: 8px;
+}
+
+.list {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+  background-color: #fff;
+}
+li {
+  text-align: left;
+  margin-bottom: 10px;
+  color: #19191a;
+  padding: 8px;
+  background-color: #f0f2f3;
+  border-radius: 16px;
+}
+
+.odkd {
+  overflow: hidden;
+  padding-top: 33px;
+}
+
+.css-1t1j96h-MuiPaper-root-MuiDialog-paper {
+  overflow: hidden;
+}
+
+.MuiDialog-paperScrollPaper {
+  overflow: hidden;
+}
+
+.MuiDialog-paper {
+  overflow: hidden;
+}
+
+.hide-vertical-scroll::-webkit-scrollbar {
+  width: 0;
+  background: transparent; /* Optional: just to hide scrollbar */
+}
+
+/* Hide vertical scrollbar for IE, Edge, and Firefox */
+.hide-vertical-scroll {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.MuiGrid2-root {
+  overflow: hidden;
+}
+
+.MuiGrid2-container {
+  overflow: hidden;
+}
+
+.MuiGrid2-direction-xs-column {
+  overflow: hidden;
+}
+
+.MuiGrid2-spacing-xs-1 {
+  overflow: hidden;
+}
+
+.css-12ynm5b-MuiGrid2-root {
+  overflow: hidden;
+}
+
+.MuiPaper-root {
+  overflow: hidden;
+}
+
+.MuiPaper-elevation {
+  overflow: hidden;
+}
+
+.MuiPaper-rounded {
+  overflow: hidden;
+}
+
+.MuiPaper-elevation24 {
+  overflow: hidden;
+}
+
+.MuiDialog-paper {
+  overflow: hidden;
+}
+
+.MuiDialog-paperScrollPaper {
+  overflow: hidden;
+}
+
+.MuiDialog-paperWidthSm {
+  overflow: hidden;
+}
+
+.react-draggable {
+  overflow: hidden;
+}
+
+.css-1t1j96h-MuiPaper-root-MuiDialog-paper {
+  overflow: hidden;
+}
+
+.lkdjkldjoiwhkj {
+  margin-top: 8px;
+}
+
