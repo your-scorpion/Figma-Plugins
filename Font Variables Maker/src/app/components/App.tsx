@@ -24,6 +24,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { PaperProps } from '@mui/material/Paper';
 import Slide from '@mui/material/Slide';
 import Zoom from '@mui/material/Zoom';
+import Tooltip from '@mui/material/Tooltip';
 
 function App() {
   const textbox = useRef<HTMLInputElement>(null);
@@ -248,24 +249,66 @@ function App() {
             </Grid>
           </Grid>
           <Divider />
-          <Grid alignItems="flex-start" direction="row" container spacing={1}>
-            <Button
-              id="create"
-              size="large"
-              onClick={onCreate}
-              variant="contained"
-              disabled={selectedTextNodesCount === 0}
-              sx={{
-                marginTop: '16px',
 
-                marginLeft: '3px',
-                opacity: selectedTextNodesCount === 0 ? 0.2 : 1,
-                pointerEvents: selectedTextNodesCount === 0 ? 'none' : 'auto', // This is to ensure the button is not clickable when disabled
-              }}
-            >
-              Generate new variables set
-            </Button>
-          </Grid>
+          <>
+            <Grid alignItems="flex-start" direction="row" container spacing={1}>
+              {selectedTextNodesCount > 0 ? (
+                <span>
+                  <Button
+                    id="create"
+                    size="large"
+                    onClick={onCreate}
+                    variant="contained"
+                    sx={{
+                      marginTop: '16px',
+                      marginLeft: '3px',
+                      opacity: 1,
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    Generate new variables set
+                  </Button>
+                </span>
+              ) : (
+                <Tooltip
+                  title="Select one or more text layers"
+                  componentsProps={{
+                    tooltip: {
+                      sx: {
+                        bgcolor: '#fff', // White background
+                        color: '#444', // Black text
+                        boxShadow: '0px 0px 10px rgba(0,0,0,0.12)', // Add some shadow for a better look
+                        border: '1px solid #999', // Black border
+                        padding: '8px', // Big paddings
+                        '& .MuiTooltip-arrow': {
+                          color: '#fff', // White arrow color
+                          border: '1px solid #999', // Black border
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <span>
+                    <Button
+                      id="create"
+                      size="large"
+                      onClick={onCreate}
+                      variant="contained"
+                      disabled={true}
+                      sx={{
+                        marginTop: '16px',
+                        marginLeft: '3px',
+                        opacity: 0.2,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      Generate new variables set
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
+            </Grid>
+          </>
         </Paper>
       </Grid>
       <span>
@@ -277,7 +320,10 @@ function App() {
                 <div>
                   <>
                     <>
-                      Selected text nodes: <Grow  timeout={232} in={animationTrigger}><span>{selectedTextNodesCount} </span></Grow>
+                      Selected text nodes:{' '}
+                      <Grow timeout={232} in={animationTrigger}>
+                        <span>{selectedTextNodesCount} </span>
+                      </Grow>
                       <span className="spacer"> </span>
                       <Grow in={animationTrigger} timeout={12}>
                         <Button variant="outlined" size="small" color={buttonColor} onClick={copyCountToTextField}>
@@ -293,13 +339,14 @@ function App() {
           <Divider className="djsokkajdasjk" />
           <div className="ddss">Select texts:</div>
           <Grid alignItems="flex-start" direction="row" container spacing={0.84}>
-            <Grid alignItems="flex-start" direction="column" container spacing={0}>
+            <Grid alignItems="flex-start" sx={{ maxWidth: '148px' }} direction="column" container spacing={0}>
               <Grid md={1}>
                 <Button
                   size="small"
                   onClick={onAction}
                   sx={{
                     color: 'black',
+                     letterSpacing: '-0.2px',
                     borderColor: 'black',
                     '&:hover': {
                       borderColor: 'black',
@@ -316,6 +363,7 @@ function App() {
                   onClick={onDeselect}
                   sx={{
                     color: 'black',
+                     letterSpacing: '-0.2px',
                     borderColor: 'black',
                     '&:hover': {
                       borderColor: 'black',
@@ -327,12 +375,12 @@ function App() {
                 </Button>
               </Grid>
               <Grid md={1}>
-                <Button color="error" size="small" onClick={onDeselect5}>
+                <Button sx={{ letterSpacing: '-0.2px'}}color="error" size="small" onClick={onDeselect5}>
                   Invert selection
                 </Button>
               </Grid>
             </Grid>
-            <Grid alignItems="flex-start" direction="column" container spacing={0}>
+            <Grid alignItems="flex-start" direction="column" sx={{ maxWidth: '201px' }} container spacing={0}>
               <Grid md={1}>
                 <Button
                   size="small"
@@ -340,6 +388,7 @@ function App() {
                   sx={{
                     color: 'black',
                     borderColor: 'black',
+                    letterSpacing: '-0.4px',
                     '&:hover': {
                       borderColor: 'black',
                       backgroundColor: 'rgba(0, 0, 0, 0.04)', // Light black background on hover
@@ -350,12 +399,12 @@ function App() {
                 </Button>
               </Grid>{' '}
               <Grid md={1}>
-                <Button color="error" size="small" onClick={onDeselect2}>
+                <Button sx={{ letterSpacing: '-0.2px'}} color="error" size="small" onClick={onDeselect2}>
                   All layers Except Texts
                 </Button>
               </Grid>
               <Grid md={1}>
-                <Button color="error" size="small" onClick={onDeselect4}>
+                <Button sx={{ letterSpacing: '-0.2px'}} color="error" size="small" onClick={onDeselect4}>
                   Deselect All
                 </Button>
               </Grid>
@@ -367,6 +416,7 @@ function App() {
       <Button
         sx={{
           color: 'black',
+          letterSpacing: '1.2px',
           borderColor: 'black',
           '&:hover': {
             borderColor: 'black',
