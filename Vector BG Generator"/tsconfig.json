@@ -1,25 +1,23 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "types": ["@figma/plugin-typings"],
     "outDir": "dist",
     "jsx": "react",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "experimentalDecorators": true,
-    "removeComments": true,
-
     "skipLibCheck": true,
-   "allowJs": true,
+    "allowJs": true,
     "esModuleInterop": true,
-
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-      "removeComments": true,
-
+    "removeComments": true,
     "typeRoots": [
       "./node_modules/@types",
-      "./node_modules/@figma"
+      "./src/types" // Adjust this if necessary based on your project structure
     ]
-  }
+  },
+  "include": ["src", "src/types/**/*.d.ts"]
 }

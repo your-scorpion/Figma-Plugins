@@ -1,386 +1,280 @@
-//DRAFT FILE
-import * as React from 'react'
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { useRef } from 'react';
-import { Button } from '@mui/material';
-import { useStyles } from "./use-styles"
-import { TextField } from '@mui/material';
-import { Chip } from '@mui/material';
-import { Avatar } from '@mui/material';
-import { deepPurple } from '@mui/material/colors';
-import InputAdornment from '@mui/material/InputAdornment';
-import Rotate90DegreesCcwOutlinedIcon from '@mui/icons-material/Rotate90DegreesCcwOutlined';
-import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import HeightIcon from '@mui/icons-material/Height';
-import DonutLargeOutlinedIcon from '@mui/icons-material/DonutLargeOutlined';
+import * as React from "react";
+import { useState } from "react";
+import { useEffect } from "react";
+import { Button } from "@mui/material";
+import { useStyles } from "./use-styles";
+import CardContent from "@mui/material/CardContent";
+import Card from "@mui/material/Card";
+//import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import Slide from "@mui/material/Slide";
+import Zoom from "@mui/material/Zoom";
+import Popover from "@mui/material/Popover";
+import Box from "@mui/material/Box";
+import { useRef } from "react";
+import Dsd from "./Form";
+import Tooltip from "@mui/material/Tooltip";
+import Grid from "@mui/material/Unstable_Grid2";
+import Bg1 from "./Bg1";
+import { useClickOutside } from "./customHookClickOutside"; // Adjust the path as needed
+import Bg2 from "./Bg2";
 
 declare function require(path: string): any;
 
-export const MessageList = () => { //это компонент без пропсов
-    const styles = useStyles();
-    const [message, setMessage] = useState(""); //текущее значение и функция для обновления значения
-    const [messages, setMessages] = useState([]);
+export const MessageList = () => {
+  const styles = useStyles();
+  const [messages, setMessages] = useState([]);
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
+  const open = Boolean(anchorEl);
 
+  const onCancel = () => {
+    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+  };
 
-    const ref = useRef(null); //привязываемся к элементу DOM
-    //const textbox = React.useRef<HTMLInputElement>(undefined);
-
-    const onCreate = () => { //туть
-        //const count = parseInt(textbox.current.value, 10);
-        //let pluginForm = document.querySelector('#formTotal');
-
-
-        //@ts-ignore
-        let pluginFormData = new FormData(formTotal);
-        let formDataObj = {};
-        for (let [key, value] of pluginFormData.entries()) {
-            formDataObj[key] = +value
-            //console.log(formDataObj);
-
-        }
-        //console.log("заебок");
-        parent.postMessage({ pluginMessage: { type: 'create-rectangles', formDataObj } }, '*');
-
-    };
-
-    const onCancel = () => {
-        parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
-    };
-
-
-
-
-
-    React.useEffect(() => {
-        // This is how we read messages sent from the plugin controller
-        window.onmessage = (event) => {
-            const { type, message } = event.data.pluginMessage;
-            if (type === 'create-rectangles') {
-                console.log(`Figma Says: ${message}`);
-            }
-        };
-    }, []);
-
-
-
-
-    const ref2 = useRef(null);
-    useEffect(() => { //зависимости эффекта строятся на том, что внутри эффекта используется
-        //console.log("ref",);
-        ref.current ? .focus()
-    }, []);
-
-
-    const ref3 = useRef(null);
-    const ref4 = useRef(null);
-    const ref5 = useRef(null);
-
-
-
-
-
-
-
-    useEffect(() => { //Хук useEffect нужен для выполнения действий после рендера страницы.
-        const lastMessage = messages[messages.length - 1]
-        let timerId = null;
-
-        if (messages.length && lastMessage ? .author != "Bot") { //? написать короткую проверку optional chaning
-            setTimeout(() => {
-                setMessages([...messages, { author: "bot", message: "hi!" }]) //спред-оператор
-            }, 742);
-        }
-
-        return () => clearInterval(timerId);
-    }, [messages])
-
-    const sendMessage = () => {
-        if (message) {
-            setMessages([...messages, { author: "user", message }]) //спред-оператор
-            setMessage("");
-        } else { console.log("AAAd A!") }
-    };
-
-
-
-
-
-
-    const handlePressInput = (event) => { //отправка по энтеру
-        if (event.code === "Enter") {
-            sendMessage();
-        }
+  const onCreate2 = () => {
+    //@ts-ignore
+    let pluginFormData = new FormData(formTotal);
+    let formDataObj22 = {};
+    for (let [key, value] of pluginFormData.entries()) {
+      formDataObj22[key] = +value;
+      //console.log(formDataObj);
     }
-    const handleFocus = (event) => event.target.select();
-
-
-
-    return ( //компонент возвращает верстку 
-        <div className={styles.wrapper}>
-			
-		
-
-				{messages.map((message, index) => (
-					<div 
-					key={index}
-					ref={ref2}>
-						{message.author}
-						{message.message}
-						<hr />
-					</div>))}
-
-{/*////////////////////////////// */}
-
-
-
-
-
-{/*
-							<Input
-							className={styles.input}
-							fullWidth
-							name="fname4"
-							onFocus={handleFocus}
-							inputRef={ref}
-							endAdornment={
-								<InputAdornment position="end"> 
-							    <AccessAlarm className={styles.icon} onClick={sendMessage}/>
-							    </InputAdornment>}
-
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							value={message}
-							/>
-
-
-*/}
-<form id="formTotal" autoComplete="on">
-<Chip label="All values must be greater than 0" variant="outlined" color="secondary" size="small"
-avatar={<Avatar sx={{ bgcolor: deepPurple[100] }}>!</Avatar>} />
-
-
-		{/*
-
-<div className={styles.field2}>
-							<TextField 
-							className={styles.input}
-							fullWidth
-							name="fname1"
-							inputRef={ref}
-							type="number"
-							onFocus={handleFocus}
-							defaultValue="100"
-							id="outlined-basic" 
-							label="Number of elements:" 
-							variant="outlined"
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							//value={message}
-							/> </div>*/}
-
-<div className={styles.field2}> <span><br></br></span>
-							<TextField sx={{ m: -1, ml:-2, width: 200 }}
-							className={styles.input}
-							fullWidth
-							name="fname2"
-							size="small"
-							placeholder="From 0 up to ∞"
-							defaultValue="180"
-							type="number"
-							//helperText="Rotate canvas"
-							inputRef={ref2}
-							onFocus={handleFocus}
-
-
-							InputProps={{
-							        style: {
-							            fontSize:16
-							        },
-							        inputProps: {
-							            min: 1,
-							            max: 900,
-							            maxLength: 3,
-							            pattern: "([^0-9]*)",
-							        },
-							        startAdornment: (
-								      <InputAdornment
-								        sx={{
-								          padding: "0px 0px",
-								        }}
-								        position="start"
-								      >
-								          <Rotate90DegreesCcwOutlinedIcon style={{marginLeft:-4}} />
-								      </InputAdornment>
-								    )
-							     }}	
-
-
-
-							id="outlined-basic" 
-							label="Canvas Rotation:" 
-							variant="outlined"
-							required={true}
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							//value={message}
-							/></div>
-
-<div className={styles.field2}>
-							<TextField sx={{ m: -1, ml:-2, width: 200 }}
-							className={styles.input}
-							fullWidth
-							size="small"
-							name="fname3"
-							inputRef={ref3}
-							onFocus={handleFocus}
-							type="number"
-							placeholder="From 0 up to ∞"
-							id="outlined-basic" 
-							defaultValue="500"
-							label="Total Canvas Width:" 
-							required={true}
-							variant="outlined"
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							InputProps={{
-							        style: {
-							            fontSize:16
-							        },
-							        inputProps: {
-							            min: 1,
-							            max: 900,
-							            maxLength: 3,
-							            pattern: "([^0-9]*)",
-							        },
-							        startAdornment: (
-								      <InputAdornment
-								        sx={{
-								          padding: "0px 0px",
-								        }}
-								        position="start"
-								      >
-								          <ArrowRightAltIcon style={{marginLeft:-4}} />
-								      </InputAdornment>
-								    )
-							     }}	
-
-							//value={message}
-							/></div>
-
-<div className={styles.field2}>
-							<TextField  sx={{ m: -1, ml:-2, width: 200 }}
-							className={styles.input}
-							fullWidth
-							name="fname4"
-							inputRef={ref4}
-							size="small"
-							onFocus={handleFocus}
-							id="outlined-basic"
-
-							type="number"
-							label="Total Canvas Height:" 
-							variant="outlined"
-							defaultValue="500"
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							//value={message}
-
-							InputProps={{
-							        style: {
-							            fontSize:16
-							        },
-							        inputProps: {
-							            min: 1,
-							            max: 900,
-							            maxLength: 3,
-							            pattern: "([^0-9]*)",
-							        },
-							        startAdornment: (
-								      <InputAdornment
-								        sx={{
-								          padding: "0px 0px",
-								         
-								        }}
-								        position="start"
-								      >
-								          <HeightIcon style={{marginLeft:-4}} />
-								      </InputAdornment>
-								    )
-							     }}	
-
-							required={true}
-							margin = "dense"
-							color = "info"
-
-
-							placeholder="From 0 up to ∞"
-							/></div>
-
-
-<div className={styles.field2}>
-							<TextField  sx={{ m: -1, ml:-2, width: 200 }}
-							className={styles.input}
-							fullWidth
-							size="small"
-							name="fname5"
-							InputLabelProps={{ shrink: true }}
-							inputRef={ref5}
-							defaultValue="15"
-							//value="15"
-							onFocus={handleFocus}
-							//helperText="Structure level"
-							id="standard" 
-							type="number"
-							label="Structure level:" 
-							variant="outlined"
-
-							InputProps={{
-							        style: {
-							            fontSize:16
-							        },
-							        inputProps: {
-							            min: 1,
-							            max: 900,
-							            maxLength: 3,
-							            pattern: "([^0-9]*)",
-							        },
-							        startAdornment: (
-								      <InputAdornment
-								        sx={{
-								          padding: "0px 0px",
-								        }}
-								        position="start"
-								      >
-								          <DonutLargeOutlinedIcon style={{marginLeft:-4}} />
-								      </InputAdornment>
-								    )
-							     }}	
-
-							onChange={(event) => setMessage(event.target.value)}
-							onKeyPress={handlePressInput}//в событие приходит эвент
-							required={true}
-							margin = "dense"
-							color = "primary"
-
-
-							placeholder="From 0 up to ∞"
-							/></div>
-							{/*<Button ref={ref} onClick={sendMessage}>send</Button>*/}
-
-				<div>
-
-				
-				{/*Count: <input ref={countRef} />*/}
-				<Button variant="contained" sx={ { borderRadius: 28, boxShadow: 1, padding: 1.3, px: 2, mx:-11.4 } }
-				style={{border: '0px solid white'}}
-				onClick={onCreate}>Create</Button> <span>             </span>
-
-				<Button variant="outlined" sx={ { borderRadius: 28, boxShadow: 1, padding: 1.3, px: 2, mx:-11.4} } onClick={onCancel} >Cancel</Button>
-				
-		 </div>			
-	 </form>
-   </div>
-
+    //console.log("заебок");
+    parent.postMessage(
+      { pluginMessage: { type: "create-grandge", formDataObj22 } },
+      "*"
     );
+  };
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Assume the page loading process takes 2 seconds
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(true); // Set isLoading to false after 2 seconds
+    }, 2000);
+
+    // Clean up the timeout to avoid memory leaks
+    return () => clearTimeout(loadingTimeout);
+  }, []);
+
+  React.useEffect(() => {
+    // This is how we read messages sent from the plugin controller
+    window.onmessage = (event) => {
+      const { type, message } = event.data.pluginMessage;
+      if (type === "create-rectangles") {
+        console.log(`Figma Says: ${message}`);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    let timerId = null;
+
+    if (messages.length && lastMessage?.author !== "Bot") {
+      timerId = setTimeout(() => {
+        setMessages([...messages, { author: "Bot", message: "hi!" }]);
+      }, 742);
+    }
+
+    return () => clearTimeout(timerId);
+  }, [messages]);
+
+  const handleClickPopover1 = (event: React.MouseEvent<HTMLDivElement>) => {
+    //console.log(event.currentTarget); // Check if this is a valid DOM element
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const ref = useClickOutside(handleClose);
+
+  const ref2 = useRef(null);
+  useEffect(() => {
+    // Check if ref2 is not null before calling focus
+    if (ref2.current) {
+      ref2.current.focus();
+    }
+  }, []);
+  return (
+    //компонент возвращает верстку
+    <div className={styles.wrapper}>
+      {messages.map((message, index) => (
+        <div key={index} ref={ref2}>
+          {message.author}
+          {message.message}
+          <hr />
+        </div>
+      ))}
+
+      <form
+        id="formTotal"
+        autoComplete="on"
+        style={{
+          padding: "0px 4px",
+          marginTop: "-29px",
+          marginLeft: "40px",
+          backgroundColor: "#f8fafe",
+          borderRadius: "19px",
+        }}
+      >
+        <div className={styles.field2}>
+          {" "}
+          <span>
+            <br></br>
+          </span>
+          <Zoom in={isLoading} timeout={256}>
+            <div>
+              <>
+                <Box
+                  sx={{
+                    cursor: "pointer",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    minWidth: "110px",
+                    width: "100%",
+                  }}
+                >
+                  <span>
+                    <Card
+                      onClick={handleClickPopover1}
+                      sx={{
+                        minWidth: 125,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        "&:hover": {
+                          scale: "1.032", // Slightly enlarge the card on hover
+                          filter: "contrast(1.08)",
+                          borderRadius: "4px",
+                        },
+                      }}
+                    >
+                      <Bg2
+                        style={{
+                          width: "110px",
+                          height: "110px",
+                        }}
+                      />
+                      <CardContent></CardContent>{" "}
+                      <div>
+                        {" "}
+                        <Grid container spacing={2}>
+                          <Popover
+                            //id={id}
+                            open={open}
+                            anchorEl={anchorEl}
+                            //onClick={handlePopoverClose}
+                            anchorOrigin={{
+                              vertical: "bottom",
+                              horizontal: "left",
+                            }}
+                            onClose={handleClose}
+                            ref={ref}
+                          >
+                            <Grid sx={{ minWidth: 225 }} xs={8}>
+                              <Dsd />
+                            </Grid>
+                          </Popover>
+                        </Grid>
+                      </div>
+                    </Card>
+                  </span>
+                </Box>
+              </>
+            </div>
+          </Zoom>
+        </div>
+        {/* Second Texture */}
+        <Zoom in={isLoading} timeout={456}>
+          <div>
+            <>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  maxWidth: "110px",
+                  width: "100%",
+                  cursor: "pointer",
+                }}
+              >
+                <span>
+                  <Slide
+                    direction="up"
+                    in={isLoading}
+                    mountOnEnter
+                    unmountOnExit
+                  >
+                    <Tooltip title="Monochromatic Grunge Geometric Texture">
+                      <Card
+                        onClick={onCreate2}
+                        sx={{
+                          minWidth: "130px",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          "&:hover": {
+                            scale: "1.032", // Slightly enlarge the card on hover
+                            filter: "contrast(1.08)",
+                            borderRadius: "4px",
+                          },
+                        }}
+                      >
+                        {" "}
+                        <Bg1
+                          style={{
+                            width: "110px",
+                            height: "110px",
+                          }}
+                        />
+                        <CardContent></CardContent>{" "}
+                        <div>
+                          {" "}
+                          <Grid container spacing={2}></Grid>
+                        </div>
+                      </Card>
+                    </Tooltip>
+                  </Slide>
+                </span>
+              </Box>
+            </>
+          </div>
+        </Zoom>
+
+        <div>
+          <div>
+            <Slide
+              timeout={832}
+              direction="up"
+              in={isLoading}
+              mountOnEnter
+              unmountOnExit
+            >
+              <Divider
+                variant="middle"
+                sx={{ marginTop: "12px", marginLeft: "-24px" }}
+              />
+            </Slide>{" "}
+            <Slide direction="up" in={isLoading} mountOnEnter unmountOnExit>
+              <span style={{ marginLeft: "-44px", marginTop: "48px" }}>
+                <Button
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 28,
+                    boxShadow: 1,
+                    padding: 1.3,
+                    px: 8,
+                    mx: -12,
+                  }}
+                  onClick={onCancel}
+                >
+                  Cancel
+                </Button>
+              </span>
+            </Slide>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
 };
