@@ -16,16 +16,15 @@ import Dsd from "./Form";
 import Tooltip from "@mui/material/Tooltip";
 import Grid from "@mui/material/Unstable_Grid2";
 import Bg1 from "./Bg1";
-import { useClickOutside } from "./customHookClickOutside"; // Adjust the path as needed
+//import { useClickOutside } from "./customHookClickOutside"; // Adjust the path as needed
 import Bg2 from "./Bg2";
+import Bg3 from "./Bg3";
 
 declare function require(path: string): any;
 
 export const MessageList = () => {
   const styles = useStyles();
   const [messages, setMessages] = useState([]);
-  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
-  const open = Boolean(anchorEl);
 
   const onCancel = () => {
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
@@ -42,6 +41,21 @@ export const MessageList = () => {
     //console.log("заебок");
     parent.postMessage(
       { pluginMessage: { type: "create-grandge", formDataObj22 } },
+      "*"
+    );
+  };
+
+  const onCreate3 = () => {
+    //@ts-ignore
+    let pluginFormData = new FormData(formTotal);
+    let formDataObj22 = {};
+    for (let [key, value] of pluginFormData.entries()) {
+      formDataObj22[key] = +value;
+      //console.log(formDataObj);
+    }
+    //console.log("заебок");
+    parent.postMessage(
+      { pluginMessage: { type: "create-complex-abstract", formDataObj22 } },
       "*"
     );
   };
@@ -80,16 +94,39 @@ export const MessageList = () => {
 
     return () => clearTimeout(timerId);
   }, [messages]);
+  const [open, setOpen] = useState(false);
+
+  const [anchorEl, setAnchorEl] = React.useState<HTMLDivElement | null>(null);
 
   const handleClickPopover1 = (event: React.MouseEvent<HTMLDivElement>) => {
     //console.log(event.currentTarget); // Check if this is a valid DOM element
     setAnchorEl(event.currentTarget);
+    setOpen(true);
   };
   const handleClose = () => {
     setAnchorEl(null);
+    setOpen(false);
   };
 
-  const ref = useClickOutside(handleClose);
+  const [hover, setHover] = useState(false);
+
+  const style = {
+    width: "110px",
+    height: hover ? "110px" : "110px",
+    transition: "transform 0.2s, filter 0.2s", // Smooth transition for transform and filter
+    transform: hover ? "scale(1.8)" : "scale(1)", // Enlarge on hover
+    filter: hover ? "brightness(1.2)" : "brightness(1)", // Adjust brightness on hover
+  };
+
+  const [hover2, setHover2] = useState(false);
+
+  const style2 = {
+    width: "110px",
+    height: hover2 ? "110px" : "110px",
+    transition: "transform 0.2s, filter 0.2s", // Smooth transition for transform and filter
+    transform: hover2 ? "scale(1.8)" : "scale(1)", // Enlarge on hover
+    filter: hover2 ? "brightness(1.2)" : "brightness(1)", // Adjust brightness on hover
+  };
 
   const ref2 = useRef(null);
   useEffect(() => {
@@ -120,7 +157,7 @@ export const MessageList = () => {
           borderRadius: "19px",
         }}
       >
-        <div className={styles.field2}>
+        <div className={styles.field3} style={{ paddingTop: "24px" }}>
           {" "}
           <span>
             <br></br>
@@ -130,7 +167,6 @@ export const MessageList = () => {
               <>
                 <Box
                   sx={{
-                    cursor: "pointer",
                     display: "flex",
                     flexWrap: "wrap",
                     minWidth: "110px",
@@ -144,10 +180,18 @@ export const MessageList = () => {
                         minWidth: 125,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
+                        transition: "transform 0.2s, filter 1.2s", // Smooth transition
                         "&:hover": {
                           scale: "1.032", // Slightly enlarge the card on hover
                           filter: "contrast(1.08)",
                           borderRadius: "4px",
+                          transform: "rotate(90deg)",
+                        },
+                        "&:active": {
+                          scale: "0.98", // Slightly shrink the card when pressed
+                          filter: "contrast(1.0)", // Optionally adjust filter on press
+                          boxShadow: "none", // Remove box-shadow or change it when pressed
+                          transform: "rotate(85deg)", // Optional: slightly adjust rotation on press
                         },
                       }}
                     >
@@ -162,16 +206,14 @@ export const MessageList = () => {
                         {" "}
                         <Grid container spacing={2}>
                           <Popover
-                            //id={id}
+                            id={open ? "simple-popover" : undefined}
                             open={open}
                             anchorEl={anchorEl}
-                            //onClick={handlePopoverClose}
+                            onClose={handleClose}
                             anchorOrigin={{
                               vertical: "bottom",
                               horizontal: "left",
                             }}
-                            onClose={handleClose}
-                            ref={ref}
                           >
                             <Grid sx={{ minWidth: 225 }} xs={8}>
                               <Dsd />
@@ -187,79 +229,149 @@ export const MessageList = () => {
           </Zoom>
         </div>
         {/* Second Texture */}
-        <Zoom in={isLoading} timeout={456}>
-          <div>
-            <>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  maxWidth: "110px",
-                  width: "100%",
-                  cursor: "pointer",
-                }}
-              >
-                <span>
-                  <Slide
-                    direction="up"
-                    in={isLoading}
-                    mountOnEnter
-                    unmountOnExit
-                  >
-                    <Tooltip title="Monochromatic Grunge Geometric Texture">
-                      <Card
-                        onClick={onCreate2}
-                        sx={{
-                          minWidth: "130px",
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                          "&:hover": {
-                            scale: "1.032", // Slightly enlarge the card on hover
-                            filter: "contrast(1.08)",
-                            borderRadius: "4px",
-                          },
-                        }}
-                      >
-                        {" "}
-                        <Bg1
-                          style={{
-                            width: "110px",
-                            height: "110px",
+        <div className={styles.field3}>
+          <Zoom in={isLoading} timeout={456}>
+            <div>
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    maxWidth: "110px",
+                    width: "100%",
+                  }}
+                >
+                  <span>
+                    <Slide
+                      direction="up"
+                      in={isLoading}
+                      mountOnEnter
+                      unmountOnExit
+                    >
+                      <Tooltip title="Monochromatic Grunge Geometric Texture">
+                        <Card
+                          onClick={onCreate2}
+                          sx={{
+                            minWidth: 125,
+                            boxShadow: 1,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            transform: "scale(1)", // Set initial scale
+                            transition:
+                              "transform 0.2s ease-in-out, filter 1.2s ease-in-out", // Smooth transition
+                            "&:hover": {
+                              scale: "1.032", // Slightly enlarge the card on hover
+                              filter: "contrast(1.08)",
+                              borderRadius: "4px",
+                              boxShadow: 8,
+                            },
+                            "&:active": {
+                              scale: "0.98", // Slightly shrink the card when pressed
+                              filter: "contrast(1.0)", // Optionally adjust filter on press
+                              boxShadow: "none", // Remove box-shadow or change it when pressed
+                              transform: "rotate(85deg)", // Optional: slightly adjust rotation on press
+                            },
+                            // Target the Bg2 component specifically
                           }}
-                        />
-                        <CardContent></CardContent>{" "}
-                        <div>
+                        >
                           {" "}
-                          <Grid container spacing={2}></Grid>
-                        </div>
-                      </Card>
-                    </Tooltip>
-                  </Slide>
-                </span>
-              </Box>
-            </>
-          </div>
-        </Zoom>
+                          <Bg1
+                            style={style}
+                            onMouseEnter={() => setHover(true)}
+                            onMouseLeave={() => setHover(false)}
+                          />
+                          <CardContent></CardContent>{" "}
+                          <div>
+                            {" "}
+                            <Grid container spacing={2}></Grid>
+                          </div>
+                        </Card>
+                      </Tooltip>
+                    </Slide>
+                  </span>
+                </Box>
+              </>
+            </div>
+          </Zoom>
+        </div>
 
+        <div className={styles.field3}>
+          <Zoom in={isLoading} timeout={956}>
+            <div>
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    maxWidth: "110px",
+                    width: "100%",
+                  }}
+                >
+                  <span>
+                    <Slide
+                      direction="up"
+                      in={isLoading}
+                      mountOnEnter
+                      unmountOnExit
+                    >
+                      <Tooltip title="Abstract marbles and lines">
+                        <Card
+                          onClick={onCreate3}
+                          sx={{
+                            minWidth: "130px",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            "&:hover": {
+                              scale: "1.032", // Slightly enlarge the card on hover
+                              filter: "contrast(1.08)",
+                              borderRadius: "4px",
+                            },
+                            "&:active": {
+                              scale: "0.98", // Slightly shrink the card when pressed
+                              filter: "contrast(2.0)", // Optionally adjust filter on press
+                              boxShadow: "none", // Remove box-shadow or change it when pressed
+                            },
+                          }}
+                        >
+                          {" "}
+                          <Bg3
+                            style={style2}
+                            onMouseEnter={() => setHover2(true)}
+                            onMouseLeave={() => setHover2(false)}
+                          />
+                          <CardContent></CardContent>{" "}
+                          <div>
+                            {" "}
+                            <Grid container spacing={2}></Grid>
+                          </div>
+                        </Card>
+                      </Tooltip>
+                    </Slide>
+                  </span>
+                </Box>
+              </>
+            </div>
+          </Zoom>
+        </div>
         <div>
           <div>
-            <Slide
-              timeout={832}
-              direction="up"
-              in={isLoading}
-              mountOnEnter
-              unmountOnExit
-            >
+            <Zoom in={isLoading}>
               <Divider
                 variant="middle"
-                sx={{ marginTop: "12px", marginLeft: "-24px" }}
+                sx={{
+                  scale: "1.62",
+                  marginTop: "8px",
+                  marginLeft: "-24px",
+                  marginButtom: "8px",
+                }}
               />
-            </Slide>{" "}
+            </Zoom>{" "}
             <Slide direction="up" in={isLoading} mountOnEnter unmountOnExit>
               <span style={{ marginLeft: "-44px", marginTop: "48px" }}>
                 <Button
                   variant="outlined"
                   sx={{
+                    marginTop: "8px",
                     borderRadius: 28,
                     boxShadow: 1,
                     padding: 1.3,

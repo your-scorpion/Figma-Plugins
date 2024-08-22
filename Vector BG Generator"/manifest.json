@@ -1,15 +1,12 @@
 {
   "name": "BG generator",
-  "id": 
+  "id": " ",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
   "permissions": [],
 
-  "editorType": [
-    "figma",
-    "figjam"
-  ],
+  "editorType": ["figma", "figjam"],
 
   "networkAccess": {
     "allowedDomains": ["none"]

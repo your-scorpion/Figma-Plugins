@@ -3,11 +3,11 @@
 export async function createAnnotationArrow() {
   const node = figma.createVector();
   node.x = getRandomNumber(-360, 350);
-  node.maskType = 'VECTOR';
+  node.maskType = "VECTOR";
   node.y = getRandomNumber(-360, 350);
   node.resize(101.82337951660156, 0);
   node.rotation = getRandomNumber(-360, 350);
-   node.setVectorNetworkAsync({
+  node.setVectorNetworkAsync({
     regions: [],
     segments: [
       {
@@ -22,26 +22,26 @@ export async function createAnnotationArrow() {
         x: 0,
         y: 0,
         // strokeCap: "NONE",
-        strokeJoin: 'MITER',
+        strokeJoin: "MITER",
         cornerRadius: 0,
-        handleMirroring: 'NONE',
+        handleMirroring: "NONE",
       },
       {
         x: 101.82337951660156,
         y: 0,
-        strokeCap: 'ARROW_EQUILATERAL',
-        strokeJoin: 'MITER',
+        strokeCap: "ARROW_EQUILATERAL",
+        strokeJoin: "MITER",
         cornerRadius: 0,
-        handleMirroring: 'NONE',
+        handleMirroring: "NONE",
       },
     ],
   });
   node.strokes = [
     {
-      type: 'SOLID',
+      type: "SOLID",
       visible: true,
       opacity: 1,
-      blendMode: 'NORMAL',
+      blendMode: "NORMAL",
       color: {
         r: 0.4257006836,
         g: 0.5960784554481506,
