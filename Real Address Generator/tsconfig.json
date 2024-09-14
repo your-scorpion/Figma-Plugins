@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "es6",
     "outDir": "dist",
+     "resolveJsonModule": true, // Add this line
+    "esModuleInterop": true,   // Add this line if not present
     "jsx": "react",
     "noUnusedLocals": true,
     "noUnusedParameters": true,

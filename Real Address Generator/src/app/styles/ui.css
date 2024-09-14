@@ -3,86 +3,58 @@
 *:before {
   box-sizing: border-box;
 }
+
 :root {
   --transition: 0.25s;
   --spark: 1.8s;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
+  --color-background: #1e1d1e;
+  --color-text: #989898;
+  --color-button-bg: #6200ea;
+  --color-button-bg-hover: #3700b3;
+  --color-button-bg-active: #1a00aa;
+  --color-button-text: #ffffff;
+  --color-button-shadow: rgba(98, 0, 234, 0.5);
+  --color-border: #ccc;
+  --color-border-dashed: #4a4646;
+  --color-accent: #E7E7E7;
+  --color-dark: #464646;
+  --color-light-text: rgba(231, 223, 232, 1);
+  --Icon-color: rgba(231, 223, 232, 1);
 }
 
 body {
-  color: #989898;
-  --active: 0;
-  background: hsl(
-    260
-    calc(var(--active) * 97%)
-    6%
-  );
-  background-color: #333437 !important;
+  color: var(--color-text);
+  background: var(--color-background);
   display: grid;
-  place-items: center;
-  min-height: 100vh;
   font-family: system-ui, sans-serif;
   transition: background var(--transition);
   overflow: hidden;
-  max-width: 320px;
 }
 
-
-
 button {
-  color: #F98585;
-  --cut: 3.1em;
-  --active: 0;
-  --bg:
-    radial-gradient(
-      40% 50% at center 100%,
-      hsl(270 calc(#121247 * 97%) 0.72% / var(--active)),
-      transparent
-    ),
-    radial-gradient(
-      80% 10% at center 1220%,
-      hsl(260 calc(var(--active) * 97%) 0.70% / var(--active)),
-      transparent
-    ),
-    hsl(260 calc(var(--active) * 97%) calc((var(--active) * 44%) + 12%));
-      background: linear-gradient(180deg,#515356, #4D4F52, #4D4F52 , #434547,#35383C, #2B2D30);
-
+  color: var(--color-button-text);
+  background: linear-gradient(180deg, #515356, #4d4f52, #434547, #35383c, #2b2d30);
   font-size: 1rem;
   font-weight: 800;
-  border: 0;
+  border: none;
   cursor: pointer;
   padding: 0.9em 1.3em;
   display: flex;
   align-items: center;
   gap: 0.0025em;
-  white-space: nowrap;
   border-radius: 100px;
   position: relative;
-  box-shadow:
-    0 0 calc(var(--active) * 0.0022em) calc(var(--active) * 0.102em) hsl(10 97% 91% / 0.75),
-    0 -0.05em 0 0 hsl(20 calc(var(--active) * 0.847%) calc(var(--active) * 12%)) inset;
-  transition: box-shadow var(--transition), scale var(--transition), background var(--transition);
-  scale: calc(1 + (var(--active) * 0.01));
+  box-shadow: 0 0 0.0022em 0.102em hsl(10 97% 91% / 0.75),
+              0 -0.05em 0 0 hsl(20 calc(var(--active) * 0.847%) calc(var(--active) * 12%)) inset;
+  transition: box-shadow var(--transition), transform var(--transition), background var(--transition);
+  transform: scale(calc(1 + (var(--active) * 0.01)));
   z-index: 1;
 }
 
-
-
 button:active {
-  scale: 1.02;
+  transform: scale(1.02);
   filter: contrast(1.25);
 }
-
-
-
 
 button:is(:hover, :focus-visible) path {
   animation-name: bounce;
@@ -90,9 +62,10 @@ button:is(:hover, :focus-visible) path {
 
 @keyframes bounce {
   35%, 65% {
-    scale: var(--scale);
+    transform: scale(var(--scale));
   }
 }
+
 .sparkle path:nth-of-type(1) {
   --scale: 0.5;
   --delay: 0.1;
@@ -111,7 +84,6 @@ button:is(:hover, :focus-visible) path {
   --base: 30%;
 }
 
-
 button:before {
   content: "";
   position: absolute;
@@ -126,15 +98,12 @@ button:before {
   position: absolute;
   inset: 0;
   border-radius: 100px;
-  rotate: 0deg;
-  overflow: hidden;
-  mask: linear-gradient(white, transparent 50%);
   animation: flip calc(var(--spark) * 2) infinite steps(2, end);
 }
 
 @keyframes flip {
   to {
-    rotate: 360deg;
+    transform: rotate(360deg);
   }
 }
 
@@ -146,15 +115,9 @@ button:before {
   top: 0%;
   left: 50%;
   z-index: -1;
-  translate: -50% -15%;
-  rotate: 0;
-  transform: rotate(-90deg);
+  transform: translate(-50% -15%) rotate(-90deg);
   opacity: calc((var(--active)) + 0.4);
-  background: conic-gradient(
-    from 0deg,
-    transparent 0 340deg,
-    white 360deg
-  );
+  background: conic-gradient(from 0deg, transparent 0 340deg, white 360deg);
   transition: opacity var(--transition);
   animation: rotate var(--spark) linear infinite both;
 }
@@ -180,12 +143,9 @@ button:before {
   }
 }
 
-
-
 @supports(selector(:has(:is(+ *)))) {
   body:has(button:is(:hover, :focus-visible)) {
     --active: 1;
-    --play-state: running;
   }
   .bodydrop {
     display: none;
@@ -194,38 +154,23 @@ button:before {
 
 button:is(:hover, :focus-visible) ~ :is(.bodydrop, .particle-pen) {
   --active: 1;
-  --play-state: runnin;
 }
 
 .bodydrop {
-  background: hsl(
-    260
-    calc(var(--active) * 97%)
-    6%
-  );
+  background: var(--color-background);
   position: fixed;
   inset: 0;
-  z-index: -1
+  z-index: -1;
 }
-
-
-
-button:is(:hover, :focus-visible) {
-  --active: 1;
-  --play-state: running;
-}
-
-
-
 
 @keyframes float-out {
   to {
-    rotate: 360deg;
+    transform: rotate(360deg);
   }
 }
 
 .text {
-  translate: 2% -6%;
+  transform: translate(2% -6%);
   letter-spacing: 0.01ch;
   background: linear-gradient(90deg, hsl(0 0% calc((var(--active) * 100%) + 65%)), hsl(0 0% calc((var(--active) * 100%) + 26%)));
   -webkit-background-clip: text;
@@ -234,74 +179,162 @@ button:is(:hover, :focus-visible) {
 }
 
 button svg {
-  inline-size: 1.25em;
-  translate: -25% -5%;
+  width: 1.25em;
+  transform: translate(-25% -5%);
 }
 
 #sfsfsf {
-  margin-top: -21px !important;
-    margin: 0 auto;
   display: block;
   left: 8%;
-    position: absolute;
-
+  position: absolute;
 }
 
 .row {
   display: flex;
   flex-direction: row;
-  margin-top: -200px;
 }
 
 .col {
-  background-color: #37383A;
+  background-color: #37383a;
   height: 200px;
-  margin-right: 20px;
-  margin-bottom: 20px;
   flex: 1;
-  padding: 20px
 }
 
 .bg-red {
+  /* Empty, consider removing or adding styles */
 }
 
 .bg-blue {
-  color: white,
+  color: var(--color-button-text);
 }
 
 .bg-green {
-  color: white;
+  color: var(--color-button-text);
 }
 
+#ajodhakdhak {}
 
-#ajodhakdhak {
-   position: fixed; /* or absolute, depending on your requirements */
-  bottom: 12px;
-}
- 
 .abzac {
-  align-content: center;
   display: block;
-    align-items: center;
-  justify-content: center;
-    position: absolute;
+  position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
 }
-
 
 #doverie {
   visibility: hidden;
 }
 
 .tooltiptiptip {
-  color:white;
-  background-color: #2E2D2F ;
+  color: var(--color-button-text);
+  background-color: #2e2d2f;
   padding: 8px;
-  margin-left: -8px;
   border-radius: 16px;
 }
 
 .hideme {
   visibility: hidden;
+}
+
+.drop-area {
+  border: 2px dashed var(--color-border-dashed);
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+}
+
+textarea {
+  width: 100%;
+  height: 200px;
+}
+
+.accordion-z-index {
+  z-index: 13330;
+  position: relative;
+  color: var(--color-text);
+}
+
+.MuiAccordionSummary-root .css-1twr7re-JoyAccordionSummary-button {
+  color: var(--color-accent);
+  transition: color var(--transition);
+}
+
+.css-10rrqsy-JoyAccordion-root[data-last-child] {
+  z-index: 999999;
+  background-color: #3b3b3e;
+}
+
+.custom-button {
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color var(--transition);
+}
+
+.custom-button:hover {
+  background-color: var(--color-button-bg-hover);
+}
+
+.custom-button:active {
+  background-color: var(--color-button-bg-active);
+}
+
+.custom-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-button-shadow);
+}
+
+.css-1twr7re-JoyAccordionSummary-button:not(.Mui-selected, [aria-selected="true"]):hover {
+  background-color: var(--color-accent);
+  color: var(--color-text) !important;
+}
+
+#star {
+  background: var(--color-dark) !important;
+  color: var(--color-light-text) !important;
+  text-shadow: none;
+  padding: 8px;
+  border-radius: 33px;
+  width: 305px;
+}
+
+.cat {
+  font-weight: 400;
+  font-size: 18px;
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, Ubuntu, Roboto, Noto, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: subpixel-antialiased;
+  line-height: 1.5;
+  color: #606c71;
+}
+
+#create {
+  width: 305px;
+  justify-content: center;
+  position: absolute;
+  left: 7px;
+  z-index: 0;
+}
+
+.global {
+  margin-top: 100px;
+}
+
+*:focus {
+  outline: 1px solid #3d3f42; /* Change the color and style as needed */
+}
+
+.grow {
+  max-width: 305px;
+  white-space: pre-line;
+}
+
+pre {
+  max-width: 305px;
+  white-space: pre-line;
 }

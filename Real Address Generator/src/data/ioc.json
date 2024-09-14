@@ -1,0 +1,17 @@
+[
+  "Anomalies found in Privileged User Activity",
+  "Red flags found in log-in activity",
+  "Deviant DNS requests",
+  "Web traffic with inhuman behavior",
+  "Unusual activity in outbound network traffic",
+  "Geographical abnormalities",
+  "Increased database read volume",
+  "Unusual HTML response sizes",
+  "Changes in mobile device profiles",
+  "Signs of DDoS activity",
+  "Wrongly placed data bundles",
+  "Conflicting port-application traffic",
+  "More requests than usual for the same file",
+  "Unusual changes in registry and/or system files",
+  "Abrupt patching of systems"
+]

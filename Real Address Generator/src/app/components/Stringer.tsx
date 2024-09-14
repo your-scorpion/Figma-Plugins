@@ -15,6 +15,7 @@ const MyComponent = styled.h4`
   justify-content: 'center',
     position: 'absolute',
   left: '50%',
+  z-index: '0'
 `;
 
 
@@ -73,11 +74,11 @@ const handleInputChange = (event) => {
     <div> 
 
       <p>
-         <a style={{ color: address ? '#989898' : 'white' }}>Select Textlayers.</a> Enter a query here:{' '}
+         <a style={{ color: address ? '#656565' : 'white' }}>Select Textlayers.</a> <span style={{color: "#656565"}}>Enter a query here: </span>{' '}
         <input
           type="text"
           name="ddd"
-          placeholder='Just start typing...'
+          placeholder='Just start typing any place...'
           id="star"
           value={addressExample}
           onChange={handleInputChange} // Handle input changes
@@ -85,7 +86,7 @@ const handleInputChange = (event) => {
       </p>
 
 
-      <button id="create" className="MyComponent" onClick={onCreate}>
+      <button onClick={onCreate}>
         Reassign address
       </button>
       <input
@@ -96,7 +97,7 @@ const handleInputChange = (event) => {
         ref={countRef}
       />
       <MyComponent>
-        <div className="grow">{address ? <pre style={{ color: 'white' }}>{address}</pre> : <p>No data available</p>}</div>
+        <div className="grow">{address ? <pre style={{ color: 'white' }}>{address}</pre> : <p style={{color: '#989898'}}>No data available</p>}</div>
       </MyComponent>
 
       {/*<input
