@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "esnext",
+    "outDir": "dist",
+    "jsx": "react",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "types": ["@figma/plugin-typings"]
+  },
+  "include": ["src"]
+}
