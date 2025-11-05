@@ -1,0 +1,424 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Roadmap Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Updated palette - bluish theme */
+        --primary: #0A0A0A;
+        --secondary: #2563EB;
+        --background: #F0F4FF;
+        --card-bg: #FFFFFF;
+        --border: #E1E7FF;
+        --text: #0A0A0A;
+        --accent: #3B82F6;
+        --muted: #DBEAFE;
+        --bar-bg: #E1E7FF;
+      }
+      html, body { height: 100%; }
+      body {
+        margin: 0; padding: 24px; font-family: 'Roboto', sans-serif; background: var(--background);
+        color: var(--text); min-width: 360px; box-sizing: border-box;
+      }
+      h1 { 
+        margin: 0 0 8px; 
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        color: var(--primary);
+      }
+      h2 { 
+        margin: 24px 0 16px; 
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        color: var(--primary);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+      }
+      .date {
+        font-style: italic;
+        color: var(--secondary);
+        margin-bottom: 24px;
+      }
+      .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 16px;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 4px;
+      }
+      .stat-label {
+        font-size: 14px;
+        color: var(--secondary);
+      }
+      .completion-bar {
+        width: 100%;
+        height: 12px;
+        background: var(--bar-bg);
+        border-radius: 0;
+        overflow: hidden;
+        margin: 16px 0;
+        border: 1px solid var(--border);
+      }
+      .completion-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+      }
+      .task-list {
+        margin-top: 24px;
+      }
+      .task-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .task-title {
+        font-weight: bold;
+        color: var(--primary);
+      }
+      .task-status {
+        font-style: italic;
+        color: var(--secondary);
+      }
+      .task-details {
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      .task-progress {
+        margin-top: 12px;
+      }
+      .task-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--bar-bg);
+        border-radius: 0;
+        overflow: hidden;
+        margin-top: 4px;
+        border: 1px solid var(--border);
+      }
+      .task-fill {
+        height: 100%;
+        background: var(--accent);
+        width: 0%;
+      }
+      .actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 32px;
+      }
+      button {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        cursor: pointer;
+        font-family: Inter, serif;
+        font-size: 14px;
+        color: var(--primary);
+      }
+      button.primary {
+        background: var(--primary);
+        color: var(--card-bg);
+      }
+      .status-distribution {
+        display: flex;
+        margin: 24px 0;
+      }
+      .status-bar {
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+      }
+      .todo-bar { background-color: #DBEAFE; }
+      .progress-bar { background-color: #3B82F6; }
+      .review-bar { background-color: #60A5FA; }
+      .done-bar { background-color: #1E40AF; }
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+      }
+      .legend-color {
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="report-container">
+      <h1 id="report-title">Roadmap Status Report</h1>
+      <div id="report-date" class="date">Generated on January 1, 2023</div>
+      
+      <div class="stats-container">
+        <div class="stat-card">
+          <div id="total-tasks" class="stat-value">0</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div id="completion-rate" class="stat-value">0%</div>
+          <div class="stat-label">Completion Rate</div>
+        </div>
+      </div>
+      
+      <h2>Task Completion</h2>
+      <div class="completion-bar">
+        <div id="completion-fill" class="completion-fill"></div>
+      </div>
+      
+      <h2>Status Distribution</h2>
+      <div id="status-distribution" class="status-distribution">
+        <!-- Will be populated by JavaScript -->
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color todo-bar"></div>
+          <span>To Do</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color progress-bar"></div>
+          <span>In Progress</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color review-bar"></div>
+          <span>Review</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color done-bar"></div>
+          <span>Done</span>
+        </div>
+      </div>
+      
+      <h2>Task Details</h2>
+      <div id="task-list" class="task-list">
+        <!-- Will be populated by JavaScript -->
+      </div>
+      
+      <div class="actions">
+        <button id="exportBtn">Export</button>
+        <button id="closeBtn" class="primary">Close</button>
+      </div>
+    </div>
+
+    <script>
+      // Initialize with empty data
+      let reportData = {
+        title: "Roadmap Status Report",
+        date: "January 1, 2023",
+        statistics: {
+          total: 0,
+          todo: 0,
+          inProgress: 0,
+          review: 0,
+          done: 0,
+          completionRate: 0
+        },
+        tasks: []
+      };
+      
+      // Listen for messages from the widget
+      window.onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        
+        if (message && message.type === 'report-data') {
+          reportData = message.data;
+          renderReport();
+        }
+      };
+      
+      // Render the report with the data
+      function renderReport() {
+        // Update title and date
+        document.getElementById('report-title').textContent = reportData.title;
+        document.getElementById('report-date').textContent = 'Generated on ' + reportData.date;
+        
+        // Update statistics
+        document.getElementById('total-tasks').textContent = reportData.statistics.total;
+        document.getElementById('completion-rate').textContent = reportData.statistics.completionRate + '%';
+        
+        // Update completion bar
+        document.getElementById('completion-fill').style.width = reportData.statistics.completionRate + '%';
+        
+        // Create status distribution bars
+        const statusDistribution = document.getElementById('status-distribution');
+        statusDistribution.innerHTML = '';
+        
+        const total = reportData.statistics.total;
+        if (total > 0) {
+          // Calculate percentages
+          const todoPercent = (reportData.statistics.todo / total) * 100;
+          const inProgressPercent = (reportData.statistics.inProgress / total) * 100;
+          const reviewPercent = (reportData.statistics.review / total) * 100;
+          const donePercent = (reportData.statistics.done / total) * 100;
+          
+          // Create bars
+          if (todoPercent > 0) {
+            const todoBar = document.createElement('div');
+            todoBar.className = 'status-bar todo-bar';
+            todoBar.style.width = todoPercent + '%';
+            todoBar.textContent = reportData.statistics.todo;
+            statusDistribution.appendChild(todoBar);
+          }
+          
+          if (inProgressPercent > 0) {
+            const inProgressBar = document.createElement('div');
+            inProgressBar.className = 'status-bar progress-bar';
+            inProgressBar.style.width = inProgressPercent + '%';
+            inProgressBar.textContent = reportData.statistics.inProgress;
+            statusDistribution.appendChild(inProgressBar);
+          }
+          
+          if (reviewPercent > 0) {
+            const reviewBar = document.createElement('div');
+            reviewBar.className = 'status-bar review-bar';
+            reviewBar.style.width = reviewPercent + '%';
+            reviewBar.textContent = reportData.statistics.review;
+            statusDistribution.appendChild(reviewBar);
+          }
+          
+          if (donePercent > 0) {
+            const doneBar = document.createElement('div');
+            doneBar.className = 'status-bar done-bar';
+            doneBar.style.width = donePercent + '%';
+            doneBar.textContent = reportData.statistics.done;
+            statusDistribution.appendChild(doneBar);
+          }
+        }
+        
+        // Render task list
+        const taskList = document.getElementById('task-list');
+        taskList.innerHTML = '';
+        
+        reportData.tasks.forEach((task, index) => {
+          const taskCard = document.createElement('div');
+          taskCard.className = 'task-card';
+          
+          // Task header with title and status
+          const taskHeader = document.createElement('div');
+          taskHeader.className = 'task-header';
+          
+          const taskTitle = document.createElement('div');
+          taskTitle.className = 'task-title';
+          taskTitle.textContent = (index + 1) + '. ' + task.title;
+          
+          const taskStatus = document.createElement('div');
+          taskStatus.className = 'task-status';
+          taskStatus.textContent = task.state;
+          
+          taskHeader.appendChild(taskTitle);
+          taskHeader.appendChild(taskStatus);
+          taskCard.appendChild(taskHeader);
+          
+          // Task description
+          if (task.description) {
+            const taskDesc = document.createElement('div');
+            taskDesc.className = 'task-details';
+            taskDesc.textContent = task.description;
+            taskCard.appendChild(taskDesc);
+          }
+          
+          // Task designer
+          if (task.designer) {
+            const taskDesigner = document.createElement('div');
+            taskDesigner.className = 'task-details';
+            taskDesigner.textContent = 'Designer: ' + task.designer;
+            taskCard.appendChild(taskDesigner);
+          }
+          
+          // Task progress bar
+          const taskProgress = document.createElement('div');
+          taskProgress.className = 'task-progress';
+          taskProgress.textContent = 'Progress: ' + task.progress + '%';
+          
+          const taskBar = document.createElement('div');
+          taskBar.className = 'task-bar';
+          
+          const taskFill = document.createElement('div');
+          taskFill.className = 'task-fill';
+          taskFill.style.width = task.progress + '%';
+          
+          taskBar.appendChild(taskFill);
+          taskProgress.appendChild(taskBar);
+          taskCard.appendChild(taskProgress);
+          
+          taskList.appendChild(taskCard);
+        });
+      }
+      
+      // Export button handler: print dialog (Save as PDF supported by browser)
+      const exportBtn = document.getElementById('exportBtn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          window.print();
+        });
+      }
+
+      // Close button handler
+      const closeBtn = document.getElementById('closeBtn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+        });
+      }
+
+      // Receive tasks from widget
+      window.onmessage = (event) => {
+        const msg = event.data && event.data.pluginMessage;
+        if (!msg) return;
+        if (msg.type === 'tasks') {
+          tasks = Array.isArray(msg.tasks) ? msg.tasks.map(t => ({ id: t.id || ('t'+Math.random().toString(36).slice(2)), title: t.title, progress: Number(t.progress || 0) })) : [];
+          render();
+        }
+      };
+
+      // Request tasks on load
+      parent.postMessage({ pluginMessage: { type: 'getTasks' } }, '*');
+
+      window.onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+        if (msg.type === 'import-json') {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json';
+          input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const text = e.target.result;
+              parent.postMessage({ pluginMessage: { type: 'json-data', data: text } }, '*');
+            };
+            reader.readAsText(file);
+          };
+          input.click();
+        }
+      };
+    </script>
+  </body>
+</html>
