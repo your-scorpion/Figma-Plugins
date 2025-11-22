@@ -3,7 +3,6 @@ import '../styles/ui.css';
 import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Alert from '@mui/material/Alert';
 import { GlobalStyles } from '@mui/material';
 import Grow from '@mui/material/Grow';
 //import InfoTwoToneIcon from '@mui/icons-material/InfoTwoTone';
@@ -25,9 +24,45 @@ import { PaperProps } from '@mui/material/Paper';
 import Slide from '@mui/material/Slide';
 import Zoom from '@mui/material/Zoom';
 import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
 
 function App() {
   const textbox = useRef<HTMLInputElement>(null);
+
+  const selectButtonSx = {
+    textTransform: 'none',
+    borderRadius: '10px',
+    px: 1,
+    py: 0.4,
+    fontSize: '12px',
+    letterSpacing: '0.05px',
+    color: '#1f2937',
+    borderColor: '#d1d5db',
+    backgroundColor: '#f8fafc',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      borderColor: '#cbd5e1',
+      backgroundColor: '#eef2f7',
+      transform: 'translateY(-1px)',
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+    },
+  } as const;
+
+  const dangerButtonSx = {
+    ...selectButtonSx,
+    color: '#b91c1c',
+    borderColor: '#fecaca',
+    backgroundColor: '#fff1f2',
+    '&:hover': {
+      borderColor: '#fca5a5',
+      backgroundColor: '#ffe4e6',
+      transform: 'translateY(-1px)',
+    },
+  } as const;
 
   function PaperComponent(props: PaperProps) {
     return (
@@ -64,6 +99,11 @@ function App() {
   const [isChecked, setIsChecked] = useState(false); // Declare isChecked state variable and its setter
   const [selectedTextNodesCount, setSelectedTextNodesCount] = useState(0); // State to store the count of selected text nodes
   const [animationTrigger, setAnimationTrigger] = useState(true); // State to trigger the animation
+  const [isReplacingUnavailable, setIsReplacingUnavailable] = useState(false);
+  const [replaceUnavailableProgress, setReplaceUnavailableProgress] = useState(0);
+  const [isReplacing, setIsReplacing] = useState(false);
+  const [replaceProgress, setReplaceProgress] = useState(0);
+  const [replacementFamily, setReplacementFamily] = useState('Manrope');
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked; // Get the checked state of the checkbox
@@ -112,11 +152,29 @@ function App() {
 
   useEffect(() => {
     window.onmessage = (event) => {
-      const { type, selectedTextNodesCount } = event.data.pluginMessage;
+      const { type, selectedTextNodesCount, total, processed } = event.data.pluginMessage;
       if (type === 'selected-text-nodes-count') {
         updateSelectedTextNodesCount(selectedTextNodesCount);
         setAnimationTrigger(false); // Set animationTrigger to false to trigger the out animation
         setTimeout(() => setAnimationTrigger(true), 91); // Set animationTrigger back to true after 12 milliseconds to trigger the in animation
+      } else if (type === 'replace-start') {
+        setIsReplacing(true);
+        setReplaceProgress(0);
+      } else if (type === 'replace-progress') {
+        const pct = total && total > 0 ? Math.round((processed / total) * 100) : 0;
+        setReplaceProgress(pct);
+      } else if (type === 'replace-complete') {
+        setReplaceProgress(100);
+        setTimeout(() => setIsReplacing(false), 150);
+      } else if (type === 'unavailable-start') {
+        setIsReplacingUnavailable(true);
+        setReplaceUnavailableProgress(0);
+      } else if (type === 'unavailable-progress') {
+        const pct2 = total && total > 0 ? Math.round((processed / total) * 100) : 0;
+        setReplaceUnavailableProgress(pct2);
+      } else if (type === 'unavailable-complete') {
+        setReplaceUnavailableProgress(100);
+        setTimeout(() => setIsReplacingUnavailable(false), 150);
       }
     };
   }, []);
@@ -152,6 +210,18 @@ function App() {
 
   const onDeselect5 = () => {
     parent.postMessage({ pluginMessage: { type: 'select-text-nodes-without-variables5' } }, '*');
+  };
+
+  const onReplaceBySize = () => {
+    parent.postMessage({ pluginMessage: { type: 'replace-texts-by-size', targetFamily: replacementFamily } }, '*');
+    setIsReplacing(true);
+    setReplaceProgress(0);
+  };
+
+  const onReplaceUnavailableFonts = () => {
+    parent.postMessage({ pluginMessage: { type: 'replace-unavailable-fonts', fallbackFamily: replacementFamily } }, '*');
+    setIsReplacingUnavailable(true);
+    setReplaceUnavailableProgress(0);
   };
 
   const buttonColor = defaultSeverity === 'success' ? 'success' : 'warning';
@@ -211,14 +281,14 @@ function App() {
         </Grid>
       </Dialog>{' '}
       <Grid justifyContent="flex-start" alignItems="baseline" direction="column" container spacing={1}>
-        <Paper elevation={0} sx={{ padding: '28px', marginLeft: '6px', borderRadius: '22px', maxHeight: '168px' }}>
-          <Grid alignItems="flex-start" direction="row" container spacing={1}>
+        <Paper elevation={0} sx={{ padding: '16px', marginLeft: '4px', borderRadius: '16px', maxHeight: '160px' }}>
+          <Grid alignItems="flex-start" direction="row" container spacing={0.5} columns={12}>
             <>
-              <Grid md={1}>
+              <Grid md={8}>
                 <TextField
-                  sx={{ width: '154px' }}
+                  sx={{ width: '100%' }}
                   id="filled-number"
-                  label="Max number of variables"
+                  label="Max number of variables to be created"
                   type="number"
                   size="small"
                   margin="dense"
@@ -232,57 +302,38 @@ function App() {
                 />
               </Grid>
             </>
-            <Grid md={1}>
-              <FormGroup aria-label="position" row sx={{ marginTop: '12px' }}>
-                <FormControlLabel
-                  sx={{
-                    width: '175px',
-                    textAlign: 'left',
-                    '& .MuiFormControlLabel-label': {
-                      fontSize: '15px', // Change this value to your desired font size
-                    },
-                  }}
-                  control={<Checkbox checked={isChecked} onChange={handleCheckboxChange} />}
-                  label="Replace current variables on texts"
-                />
-              </FormGroup>
-            </Grid>
-          </Grid>
-          <Divider />
-
-          <>
-            <Grid alignItems="flex-start" direction="row" container spacing={1}>
+            <Grid md={4}>
               {selectedTextNodesCount > 0 ? (
                 <span>
                   <Button
-                    id="create"
-                    size="large"
+                      id="create"
+                      size="medium"
                     onClick={onCreate}
                     variant="contained"
                     sx={{
-                      marginTop: '16px',
-                      marginLeft: '3px',
+                      marginTop: '6px',
+                      marginLeft: '8px',
                       opacity: 1,
                       pointerEvents: 'auto',
                     }}
                   >
-                    Generate new variables set
+                    Generate 
                   </Button>
                 </span>
               ) : (
                 <Tooltip
-                  title="Select one or more text layers"
+                  title="Select one or more text layers."
                   componentsProps={{
                     tooltip: {
                       sx: {
-                        bgcolor: '#fff', // White background
-                        color: '#444', // Black text
-                        boxShadow: '0px 0px 10px rgba(0,0,0,0.12)', // Add some shadow for a better look
-                        border: '1px solid #999', // Black border
-                        padding: '8px', // Big paddings
+                        bgcolor: '#fff',
+                        color: '#444',
+                        boxShadow: '0px 0px 10px rgba(0,0,0,0.12)',
+                        border: '1px solid #999',
+                        padding: '8px',
                         '& .MuiTooltip-arrow': {
-                          color: '#fff', // White arrow color
-                          border: '1px solid #999', // Black border
+                          color: '#fff',
+                          border: '1px solid #999',
                         },
                       },
                     },
@@ -291,128 +342,155 @@ function App() {
                   <span>
                     <Button
                       id="create"
-                      size="large"
+                      size="medium"
                       onClick={onCreate}
                       variant="contained"
                       disabled={true}
                       sx={{
-                        marginTop: '16px',
-                        marginLeft: '3px',
+                        marginTop: '6px',
+                        marginLeft: '8px',
                         opacity: 0.2,
                         pointerEvents: 'none',
                       }}
                     >
-                      Generate new variables set
+                      Generate
                     </Button>
                   </span>
                 </Tooltip>
               )}
             </Grid>
-          </>
+           
+            <Grid md={12}>
+              <FormGroup aria-label="position" row sx={{ marginTop: '2px' }}>
+                <FormControlLabel
+                  sx={{
+                    width: '100%',
+                    textAlign: 'left',
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '11px',
+                    },
+                  }}
+                control={<Checkbox checked={isChecked} onChange={handleCheckboxChange} sx={{ transform: 'scale(0.85)', padding: '0 4px' }} />}
+                label="Replace current variables on texts"
+              />
+              </FormGroup>
+            </Grid>
+          </Grid>
+
+          
         </Paper>
       </Grid>
       <span>
-        <Paper elevation={0} sx={{ marginTop: '16px', borderRadius: '22px', padding: '26px' }}>
-          {' '}
-          <span className="exper">
-            <Grid rowSpacing={1} direction="row" container spacing={1}>
-              <Alert icon={false} severity={defaultSeverity}>
-                <div>
-                  <>
-                    <>
-                      Selected text nodes:{' '}
-                      <Grow timeout={232} in={animationTrigger}>
-                        <span>{selectedTextNodesCount} </span>
-                      </Grow>
-                      <span className="spacer"> </span>
-                      <Grow in={animationTrigger} timeout={12}>
-                        <Button variant="outlined" size="small" color={buttonColor} onClick={copyCountToTextField}>
-                          Use this value
-                        </Button>
-                      </Grow>
-                    </>
-                  </>
-                </div>{' '}
-              </Alert>
+        <Paper elevation={0} sx={{ marginTop: '10px', borderRadius: '16px', padding: '16px' }}>
+                    <Typography variant="subtitle1" sx={{ textAlign: 'left', fontWeight: 600 }}>Select the text layers on the page:</Typography>
+
+
+          <Grid alignItems="flex-start" direction="row" container spacing={0.5} columns={12}>
+            <Grid md={3}>
+              <Button size="small" onClick={onAction} sx={selectButtonSx} variant="outlined">
+                All Text-layers
+              </Button>
             </Grid>
-          </span>
-          <Divider className="djsokkajdasjk" />
-          <div className="ddss">Select texts:</div>
-          <Grid alignItems="flex-start" direction="row" container spacing={0.84}>
-            <Grid alignItems="flex-start" sx={{ maxWidth: '148px' }} direction="column" container spacing={0}>
-              <Grid md={1}>
-                <Button
-                  size="small"
-                  onClick={onAction}
-                  sx={{
-                    color: 'black',
-                     letterSpacing: '-0.2px',
-                    borderColor: 'black',
-                    '&:hover': {
-                      borderColor: 'black',
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)', // Light black background on hover
-                    },
-                  }}
-                >
-                  All Text-layers
-                </Button>
-              </Grid>
-              <Grid md={1}>
-                <Button
-                  size="small"
-                  onClick={onDeselect}
-                  sx={{
-                    color: 'black',
-                     letterSpacing: '-0.2px',
-                    borderColor: 'black',
-                    '&:hover': {
-                      borderColor: 'black',
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)', // Light black background on hover
-                    },
-                  }}
-                >
-                  With No Variables
-                </Button>
-              </Grid>
-              <Grid md={1}>
-                <Button sx={{ letterSpacing: '-0.2px'}}color="error" size="small" onClick={onDeselect5}>
-                  Invert selection
-                </Button>
-              </Grid>
+            <Grid md={3}>
+              <Button size="small" onClick={onDeselect} sx={selectButtonSx} variant="outlined">
+                With No Variables
+              </Button>
             </Grid>
-            <Grid alignItems="flex-start" direction="column" sx={{ maxWidth: '201px' }} container spacing={0}>
-              <Grid md={1}>
-                <Button
-                  size="small"
-                  onClick={onDeselect3}
-                  sx={{
-                    color: 'black',
-                    borderColor: 'black',
-                    letterSpacing: '-0.4px',
-                    '&:hover': {
-                      borderColor: 'black',
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)', // Light black background on hover
-                    },
-                  }}
-                >
-                  No variables, frames only
-                </Button>
-              </Grid>{' '}
-              <Grid md={1}>
-                <Button sx={{ letterSpacing: '-0.2px'}} color="error" size="small" onClick={onDeselect2}>
-                  All layers Except Texts
-                </Button>
-              </Grid>
-              <Grid md={1}>
-                <Button sx={{ letterSpacing: '-0.2px'}} color="error" size="small" onClick={onDeselect4}>
-                  Deselect All
-                </Button>
-              </Grid>
+            <Grid md={3}>
+              <Button size="small" onClick={onDeselect5} sx={dangerButtonSx} variant="outlined">
+                Invert selection
+              </Button>
             </Grid>
-          </Grid>{' '}
+            <Grid md={3}>
+              <Button size="small" onClick={onDeselect4} sx={dangerButtonSx} variant="outlined">
+                Deselect All
+              </Button>
+            </Grid>
+            <Grid md={3}>
+              <Button size="small" onClick={onDeselect3} sx={selectButtonSx} variant="outlined">
+                No variables, in frames only
+              </Button>
+            </Grid>
+            <Grid md={3}>
+              <Button size="small" onClick={onDeselect2} sx={dangerButtonSx} variant="outlined">
+                All layers Except Texts
+              </Button>
+            </Grid>
+             <Grid md={12} sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
+              <Typography variant="body2" component="span">Selected texts:</Typography>
+              <Grow timeout={232} in={animationTrigger}>
+                <Chip size="small" label={String(selectedTextNodesCount)} sx={{ height: 20, '& .MuiChip-label': { px: '6px', fontSize: '11px' } }} />
+              </Grow>
+              <Grow in={animationTrigger} timeout={12}>
+                <Button variant="outlined" size="small" color={buttonColor} onClick={copyCountToTextField} sx={{ minWidth: 'auto', height: 20, px: '6px', py: '2px', fontSize: '11px', letterSpacing: '0.2px' }}>
+                  Use this value
+                </Button>
+              </Grow>
+            </Grid>
+            <Grid md={3}></Grid>
+            <Grid md={3}></Grid>
+          </Grid>
         </Paper>
       </span>
-      <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+      <span>
+        <Paper elevation={0} sx={{ marginTop: '10px', borderRadius: '16px', padding: '16px' }}>
+          <Typography variant="subtitle1" sx={{ textAlign: 'left', fontWeight: 600 }}>Replace fonts</Typography>
+          <Grid alignItems="flex-start" direction="row" container spacing={0.5} columns={12}>
+            <Grid md={1}>
+              <TextField
+                sx={{ width: '100%' }}
+                id="replacement-family"
+                label="Fallback --- Replacement font family"
+                type="text"
+                size="small"
+                margin="dense"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                variant="filled"
+                fullWidth
+                value={replacementFamily}
+                onChange={(e) => setReplacementFamily(e.target.value)}
+              />
+            </Grid>
+              <Grid md={3}>
+                <Button
+                  size="small"
+                  onClick={onReplaceBySize}
+                  disabled={isReplacing || selectedTextNodesCount === 0}
+                  sx={selectButtonSx}
+                  variant="outlined"
+                >
+                  {isReplacing ? 'Replacing…' : 'Replace by variables (size)'}
+                </Button>
+              {isReplacing && (
+                <span style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
+                  <CircularProgress size={18} />
+                  <span style={{ marginLeft: '6px', fontSize: '12px' }}>{replaceProgress}%</span>
+                </span>
+              )}
+            </Grid>
+              <Grid md={1}>
+                <Button
+                  size="small"
+                  onClick={onReplaceUnavailableFonts}
+                  disabled={isReplacingUnavailable || selectedTextNodesCount === 0}
+                  sx={selectButtonSx}
+                  variant="outlined"
+                >
+                  {isReplacingUnavailable ? 'Replacing…' : `Replace unavailable → ${replacementFamily}`}
+                </Button>
+              {isReplacingUnavailable && (
+                <span style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
+                  <CircularProgress size={18} />
+                  <span style={{ marginLeft: '6px', fontSize: '12px' }}>{replaceUnavailableProgress}%</span>
+                </span>
+              )}
+            </Grid>
+          </Grid>
+        </Paper>
+      </span>
+<Divider />
       <Button
         sx={{
           color: 'black',
