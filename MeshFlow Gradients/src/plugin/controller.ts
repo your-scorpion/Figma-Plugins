@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 640, height: 530 });
+figma.showUI(__html__, { width: 730, height: 530 });
 //import base64Data from "../app/components/App";
  
 
@@ -12,10 +12,11 @@ figma.ui.onmessage = (msg) => {
     const nodes = [];
     const rectPromises = [];
 
+    function getRandomValue() {
+      return Math.random() * 1400 - 700;
+    }
+
     for (let i = 0; i < msg.count; i++) {
-          function getRandomValue() {
-            return Math.random() * 1400 - 700;
-          }
 
       const rect = figma.createRectangle();
       rect.x = getRandomValue(); // Set the initial x position
@@ -34,6 +35,10 @@ figma.ui.onmessage = (msg) => {
             },
           ];
 
+          return rect;
+        }).catch(err => {
+          console.error("Failed to create image:", err);
+          // Fallback or cleanup if needed
           return rect;
         })
       );
