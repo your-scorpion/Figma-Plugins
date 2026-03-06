@@ -1,5 +1,5 @@
 // Initialize Figma UI
-figma.showUI(__html__, { width: 342, height: 512, themeColors: true });
+figma.showUI(__html__, { width: 452, height: 612, themeColors: true });
  
 // Importing datasets 
 import aptlist from '../data/apt.json'; // APT data
@@ -134,6 +134,32 @@ async function updateTextNode(node: TextNode): Promise<void> {
   return;
 }
 
+function hexToRgba(hex: string): RGBA {
+  let value = hex.trim();
+  if (value.startsWith('#')) {
+    value = value.slice(1);
+  }
+
+  // Support #RGB, #RRGGBB, #RGBA, #RRGGBBAA
+  if (value.length === 3 || value.length === 4) {
+    value = value
+      .split('')
+      .map((ch) => ch + ch)
+      .join('');
+  }
+
+  if (value.length !== 6 && value.length !== 8) {
+    throw new Error(`Invalid hex color: ${hex}`);
+  }
+
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+  const a = value.length === 8 ? parseInt(value.slice(6, 8), 16) / 255 : 1;
+
+  return { r, g, b, a };
+}
+
 // Handle messages from the UI
 figma.ui.onmessage = async (msg) => {
   try {
@@ -231,6 +257,41 @@ figma.ui.onmessage = async (msg) => {
         type: 'create-rectangles',
         message: `Created ${selectedTextNodes.length} Rectangles`,
       });
+    } else if (msg.type === 'create-variable-collection') {
+      const tokens = (msg.tokens || []) as { name: string; value: string }[];
+      const collectionName =
+        (typeof msg.collectionName === 'string' && msg.collectionName.trim().length > 0
+          ? msg.collectionName.trim()
+          : null) || 'Dicopal Colors';
+
+      if (!tokens.length) {
+        figma.notify('No colors received from UI.');
+        return;
+      }
+
+      if (!figma.variables) {
+        figma.notify('This Figma version does not support variables.');
+        return;
+      }
+
+      const collection = figma.variables.createVariableCollection(collectionName);
+      const modeId = collection.modes[0].modeId;
+      collection.renameMode(modeId, 'Mode 1');
+
+      let createdCount = 0;
+
+      for (const token of tokens) {
+        try {
+          const variable = figma.variables.createVariable(token.name, collection, 'COLOR');
+          const rgba = hexToRgba(token.value);
+          variable.setValueForMode(modeId, rgba);
+          createdCount += 1;
+        } catch (error) {
+          console.error('Failed to create variable for token', token, error);
+        }
+      }
+
+      figma.notify(`Created ${createdCount} color variables in "Dicopal Colors" collection.`);
     }
   } catch (error) {
     console.error('Error:', error);

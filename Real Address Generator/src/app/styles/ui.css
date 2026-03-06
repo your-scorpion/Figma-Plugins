@@ -194,6 +194,38 @@ button svg {
   flex-direction: row;
 }
 
+.swiss-accordion {
+  width: 436px;
+  max-width: 436px;
+  margin: 4px auto 0;
+  padding: 6px 4px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: radial-gradient(circle at 0 0, #3a3b3f 0, #1c1d20 40%, #15161a 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.015),
+    0 18px 32px rgba(0, 0, 0, 0.6);
+}
+
+.swiss-accordion > * + * {
+  margin-top: 6px;
+}
+
+.swiss-accordion .MuiAccordionSummary-root,
+.swiss-accordion .JoyAccordionSummary-button {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.swiss-accordion .MuiAccordionDetails-root,
+.swiss-accordion .JoyAccordionDetails-root {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
 .col {
   background-color: #37383a;
   height: 200px;
@@ -246,6 +278,256 @@ button svg {
 textarea {
   width: 100%;
   height: 200px;
+}
+
+.dicopal-explorer {
+  margin-top: 12px;
+  padding: 18px 16px 16px;
+  border-radius: 10px;
+  background: #222325;
+  color: var(--color-light-text);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dicopal-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.dicopal-subtitle {
+  margin: 0 0 12px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #a0a3aa;
+}
+
+.dicopal-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.dicopal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+
+.dicopal-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #b8bbc2;
+}
+
+.dicopal-select,
+.dicopal-input {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: #17181a;
+  color: var(--color-light-text);
+  font-size: 12px;
+  outline: none;
+}
+
+.dicopal-select:focus,
+.dicopal-input:focus {
+  border-color: #ff4151;
+  box-shadow: 0 0 0 1px rgba(255, 65, 81, 0.7);
+}
+
+.dicopal-meta-row {
+  font-size: 11px;
+  color: #8e929a;
+  margin-bottom: 14px;
+}
+
+.dicopal-export-row {
+  margin-bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dicopal-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.9);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  cursor: pointer;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    background 160ms ease-out,
+    border-color 160ms ease-out,
+    color 160ms ease-out,
+    box-shadow 180ms ease-out,
+    transform 140ms ease-out;
+}
+
+.dicopal-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.5), transparent 55%);
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.dicopal-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.25), transparent 40%);
+  mix-blend-mode: soft-light;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.dicopal-button:hover,
+.dicopal-button:focus-visible {
+  border-color: rgba(37, 99, 235, 1);
+  background: linear-gradient(135deg, #1d4ed8, #1d4ed8);
+  box-shadow:
+    0 0 0 0.5px rgba(191, 219, 254, 0.7),
+    0 6px 14px rgba(36, 36, 37, 0.32);
+  transform: translateY(-0.3px) scale(1.01);
+}
+
+.dicopal-button:hover::before,
+.dicopal-button:focus-visible::before {
+  opacity: 1;
+}
+
+.dicopal-button:hover::after,
+.dicopal-button:focus-visible::after {
+  opacity: 1;
+}
+
+.dicopal-button:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.85);
+}
+
+.dicopal-button-secondary {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.9);
+  color: #e5e7eb;
+}
+
+.dicopal-button-secondary:hover,
+.dicopal-button-secondary:focus-visible {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(148, 163, 184, 1);
+}
+
+.dicopal-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 260px;
+  overflow: auto;
+  padding-right: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dicopal-section {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: #18191b;
+  padding: 12px;
+}
+
+.dicopal-palette-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.dicopal-palette-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.dicopal-palette-badge {
+  font-size: 10px;
+  color: #a0a3aa;
+}
+
+.dicopal-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.dicopal-swatch {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #101114;
+}
+
+.dicopal-swatch-color {
+  height: 32px;
+}
+
+.dicopal-swatch-meta {
+  padding: 6px 8px;
+  font-size: 10px;
+  background: rgba(15, 23, 42, 0.2);
+  color: #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.dicopal-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 10px;
+  background: rgba(15, 23, 42, 0.2);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.dicopal-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: #ff4151;
+  color: #e5e7eb;
+  white-space: nowrap;
 }
 
 .accordion-z-index {

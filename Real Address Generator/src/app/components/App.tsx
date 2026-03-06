@@ -2,12 +2,13 @@ import React from 'react';
 import '../styles/ui.css';
 import Stringer from './Stringer';
 import './cat.css';
-import MuiButton from "@mui/material/Button";
+import MuiButton from '@mui/material/Button';
 import { Grid } from '@mui/material';
 import AccordionGroup from '@mui/joy/AccordionGroup';
 import Accordion from '@mui/joy/Accordion';
 import AccordionDetails from '@mui/joy/AccordionDetails';
 import AccordionSummary from '@mui/joy/AccordionSummary';
+import DicopalPaletteExplorer from './DicopalPaletteExplorer';
 
 interface AppState {
   text: string;
@@ -152,7 +153,10 @@ class App extends React.Component<{}, AppState> {
       <span>
         <div className="row" id="ajodhakdhak">
           <div>
-            <AccordionGroup sx={{ maxWidth: 400 }}>
+            <AccordionGroup
+              className="swiss-accordion"
+              sx={{ width: 436, maxWidth: 436, mx: 'auto' }}
+            >
               <Accordion expanded={openAccordion === 0} onChange={() => this.handleAccordionChange(0)}>
                 <AccordionSummary>Upload Dataset</AccordionSummary>
                 <AccordionDetails>
@@ -223,10 +227,26 @@ class App extends React.Component<{}, AppState> {
                 <AccordionSummary>Generate Address</AccordionSummary>
                 <AccordionDetails>
                   <div className="row">
-                    <div id="uniswap" style={{ backgroundColor: "#262627", minHeight: "220px", borderRadius: '18px', padding: '8px', marginLeft: '-12px'}}>
+                    <div
+                      id="uniswap"
+                      style={{
+                        backgroundColor: '#262627',
+                        minHeight: '220px',
+                        borderRadius: '18px',
+                        padding: '8px',
+                        marginLeft: '-12px',
+                      }}
+                    >
                       <Stringer />
                     </div>
                   </div>
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion expanded={openAccordion === 3} onChange={() => this.handleAccordionChange(3)}>
+                <AccordionSummary>Dicopal Palette Explorer</AccordionSummary>
+                <AccordionDetails>
+                  <DicopalPaletteExplorer />
                 </AccordionDetails>
               </Accordion>
 

@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.13.0",
     "@mui/joy": "^5.0.0-beta.48",
     "@mui/material": "^6.1.0",
+    "dicopal": "^0.8.1",
     "axios": "^1.6.3",
     "react": "^18.2.0",
     "react-aria-components": "^1.0.0",
