@@ -1,0 +1,307 @@
+/* Apple-style slider styling */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-ms-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-webkit-slider-track {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"]::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+
+input[type="range"]::-ms-track {
+  background: transparent;
+  border: none;
+  color: transparent;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes floatY {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Advanced Mathematical Animations - Hover Only */
+@keyframes quantumFloat {
+  0% { 
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: hue-rotate(0deg) saturate(0.6) brightness(1);
+  }
+  12.5% { 
+    transform: translate3d(4px, -3px, 2px) scale(1.02) rotateX(2deg) rotateY(1deg);
+    filter: hue-rotate(20deg) saturate(0.65) brightness(2);
+  }
+  25% { 
+    transform: translate3d(8px, -2px, 4px) scale(0.98) rotateX(-1deg) rotateY(2deg);
+    filter: hue-rotate(40deg) saturate(0.63) brightness(1);
+  }
+  37.5% { 
+    transform: translate3d(3px, -5px, 3px) scale(1.03) rotateX(1deg) rotateY(-2deg);
+    filter: hue-rotate(60deg) saturate(0.66) brightness(17);
+  }
+  50% { 
+    transform: translate3d(0, -4px, 0) scale(1.01) rotateX(-1deg) rotateY(1deg);
+    filter: hue-rotate(80deg) saturate(0.64) brightness(2);
+  }
+  62.5% { 
+    transform: translate3d(-4px, -3px, 2px) scale(0.99) rotateX(2deg) rotateY(-1deg);
+    filter: hue-rotate(100deg) saturate(0.65) brightness(1);
+  }
+  75% { 
+    transform: translate3d(-6px, -1px, 3px) scale(1.04) rotateX(-2deg) rotateY(1deg);
+    filter: hue-rotate(120deg) saturate(0.66) brightness(48);
+  }
+  87.5% { 
+    transform: translate3d(-2px, -4px, 1px) scale(0.97) rotateX(1deg) rotateY(-1deg);
+    filter: hue-rotate(140deg) saturate(0.63) brightness(22);
+  }
+  100% { 
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: hue-rotate(0deg) saturate(0.6) brightness(2);
+  }
+}
+
+/* Hover delay classes */
+.quantum-hover-delay {
+  animation: none;
+  transition: all 3.3s ease;
+}
+
+.quantum-hover-delay:hover {
+  animation-delay: 3s;
+}
+
+.quantum-hover-delay:hover .quantum-float {
+  animation: quantumFloat 4s ease-in-out infinite;
+  animation-delay: 0.73s;
+}
+
+.quantum-hover-delay:hover .morphing-grid {
+  animation: morphingGrid 20s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.quantum-hover-delay:hover .chaotic-particle {
+  animation: chaoticParticles 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.quantum-hover-delay:hover .quantum-shimmer {
+  animation: quantumShimmer 9s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.quantum-hover-delay:hover .fractal-rotation {
+  animation: fractalRotation 6s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.quantum-hover-delay:hover .hyperdimensional-pulse {
+  animation: hyperdimensionalPulse 12s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+@keyframes morphingGrid {
+  0% { 
+    background-image: 
+      radial-gradient(circle at calc(20% + sin(0) * 10%), calc(40% + cos(0) * 5%), rgba(255,255,255,0.03)),
+      radial-gradient(circle at calc(80% - sin(0) * 15%), calc(60% - cos(0) * 8%), rgba(140,120,255,0.04)),
+      linear-gradient(calc(0deg + sin(0) * 45deg), rgba(255,255,255,0.02), transparent);
+  }
+  25% { 
+    background-image: 
+      radial-gradient(circle at calc(30% + sin(1.57) * 12%), calc(50% + cos(1.57) * 7%), rgba(255,255,255,0.05)),
+      radial-gradient(circle at calc(70% - sin(1.57) * 18%), calc(40% - cos(1.57) * 10%), rgba(140,120,255,0.06)),
+      linear-gradient(calc(90deg + sin(1.57) * 45deg), rgba(255,255,255,0.03), transparent);
+  }
+  50% { 
+    background-image: 
+      radial-gradient(circle at calc(50% + sin(3.14) * 8%), calc(60% + cos(3.14) * 6%), rgba(255,255,255,0.04)),
+      radial-gradient(circle at calc(50% - sin(3.14) * 12%), calc(40% - cos(3.14) * 9%), rgba(140,120,255,0.05)),
+      linear-gradient(calc(180deg + sin(3.14) * 45deg), rgba(255,255,255,0.02), transparent);
+  }
+  75% { 
+    background-image: 
+      radial-gradient(circle at calc(70% + sin(4.71) * 15%), calc(30% + cos(4.71) * 8%), rgba(255,255,255,0.06)),
+      radial-gradient(circle at calc(30% - sin(4.71) * 20%), calc(70% - cos(4.71) * 12%), rgba(140,120,255,0.07)),
+      linear-gradient(calc(270deg + sin(4.71) * 45deg), rgba(255,255,255,0.04), transparent);
+  }
+  100% { 
+    background-image: 
+      radial-gradient(circle at calc(20% + sin(6.28) * 10%), calc(40% + cos(6.28) * 5%), rgba(255,255,255,0.03)),
+      radial-gradient(circle at calc(80% - sin(6.28) * 15%), calc(60% - cos(6.28) * 8%), rgba(140,120,255,0.04)),
+      linear-gradient(calc(360deg + sin(6.28) * 45deg), rgba(255,255,255,0.02), transparent);
+  }
+}
+
+@keyframes chaoticParticles {
+  0% { 
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.3;
+  }
+  10% { 
+    transform: translate3d(calc(sin(0.628) * 20px), calc(cos(0.628) * 15px), 0) scale(1.2);
+    opacity: 0.8;
+  }
+  20% { 
+    transform: translate3d(calc(sin(1.256) * -15px), calc(cos(1.256) * 25px), 0) scale(0.6);
+    opacity: 0.4;
+  }
+  80% { 
+    transform: translate3d(calc(sin(5.024) * 20px), calc(cos(5.024) * -25px), 0) scale(0.5);
+    opacity: 0.3;
+  }
+  90% { 
+    transform: translate3d(calc(sin(5.652) * -30px), calc(cos(5.652) * 10px), 0) scale(1.4);
+    opacity: 0.9;
+  }
+  100% { 
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.3;
+  }
+}
+
+@keyframes fractalRotation {
+  0% { 
+    transform: rotate(0deg) scale(1) skew(0deg, 0deg);
+    filter: hue-rotate(0deg) contrast(1) brightness(1);
+  }
+  16.66% { 
+    transform: rotate(calc(60deg + sin(1.047) * 15deg)) scale(calc(1 + sin(1.047) * 0.1)) skew(calc(sin(1.047) * 5deg), calc(cos(1.047) * 3deg));
+    filter: hue-rotate(60deg) contrast(calc(1 + sin(1.047) * 0.2)) brightness(calc(1 + cos(1.047) * 0.1));
+  }
+  100% { 
+    transform: rotate(360deg) scale(1) skew(0deg, 0deg);
+    filter: hue-rotate(360deg) contrast(1) brightness(1);
+  }
+}
+
+@keyframes quantumShimmer {
+  0% { 
+    transform: translateX(calc(-100% - sin(0) * 50px)) skewX(calc(sin(0) * 15deg));
+    opacity: 0;
+  }
+  25% { 
+    transform: translateX(calc(-50% + sin(1.57) * 30px)) skewX(calc(sin(1.57) * 25deg));
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translateX(calc(0% + sin(3.14) * 20px)) skewX(calc(sin(3.14) * 35deg));
+    opacity: 1;
+  }
+  75% { 
+    transform: translateX(calc(50% + sin(4.71) * 40px)) skewX(calc(sin(4.71) * 20deg));
+    opacity: 0.6;
+  }
+  100% { 
+    transform: translateX(calc(100% + sin(6.28) * 60px)) skewX(calc(sin(6.28) * 10deg));
+    opacity: 0;
+  }
+}
+
+@keyframes hyperdimensionalPulse {
+  0% { 
+    transform: scale(1) rotate(0deg) translateZ(0);
+    filter: blur(0px) brightness(1) saturate(1);
+    box-shadow: 0 0 0 rgba(140,120,255,0);
+  }
+  100% { 
+    transform: scale(1) rotate(0deg) translateZ(0);
+    filter: blur(0px) brightness(1) saturate(1);
+    box-shadow: 0 0 0 rgba(140,120,255,0);
+  }
+}
+
+@keyframes tabSlideInForward {
+  0% {
+    opacity: 0;
+    transform: translate3d(22px, 0, 0) scale(0.985);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes tabSlideInBackward {
+  0% {
+    opacity: 0;
+    transform: translate3d(-22px, 0, 0) scale(0.985);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes tabSlideOutForward {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-18px, 0, 0) scale(0.992);
+    filter: blur(8px);
+  }
+}
+
+@keyframes tabSlideOutBackward {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(18px, 0, 0) scale(0.992);
+    filter: blur(8px);
+  }
+}

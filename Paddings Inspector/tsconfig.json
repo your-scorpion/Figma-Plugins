@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "esnext",
+    "target": "es2017",                        
+    "module": "commonjs",                      
+    "rootDir": "src",
     "outDir": "dist",
-    "jsx": "react",
+    "jsx": "react-jsx",                        
+    "strict": true,                            
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,                   
     "removeComments": true,
-    "noImplicitAny": false,
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "types": ["@figma/plugin-typings"]
   },
   "include": ["src"]

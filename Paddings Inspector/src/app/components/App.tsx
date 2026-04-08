@@ -1,344 +1,236 @@
-import React from 'react';
-//import ReactDOM from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 import '../styles/ui.css';
-//import { VariableList } from './VariableList';
-import { NumberVariable } from './types';
+import './styles/animations.css';
+import { useAppState } from './hooks/useAppState';
+import { usePluginMessages } from './hooks/usePluginMessages';
+import { useToolbarVisibility } from './hooks/useToolbarVisibility';
+import { useBottomToolbarHeight } from './hooks/useBottomToolbarHeight';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { TabNavigation } from './TabNavigation';
+import { TopToolbar } from './TopToolbar';
+import { BottomToolbar } from './BottomToolbar';
+import { EmptyState } from './EmptyState';
+import { PaddingNode } from './PaddingNode';
+import { ColorTab } from './ColorTab';
+import { ButtonsTab } from './ButtonsTab';
+import { NamingPromptModal } from './modals/NamingPromptModal';
+import { ArrangeFramesModal } from './modals/ArrangeFramesModal';
+import { ApiUrlModal } from './modals/ApiUrlModal';
+import { ApiResponseModal } from './modals/ApiResponseModal';
+import { sendSelectNextAutoLayout, sendCreatePaddingVariables } from './utils/pluginMessages';
+import { TabType } from './types';
 
+const TAB_ORDER: TabType[] = ['paddings', 'colors', 'buttons'];
 
-
-
-function PaddingDropdown({
-  label,
-  initialValue,
-  id,
-  side,
-  numberVariables,
-}: {
-  label: string;
-  initialValue: number;
-  id: string;
-  side: 'top' | 'bottom' | 'left' | 'right';
-  numberVariables: NumberVariable[];
-}) {
-  const [inputValue, setInputValue] = React.useState(initialValue.toString());
-  const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
-
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const containerRef = React.useRef<HTMLLabelElement>(null);
-
-const variableOptions = React.useMemo(
-  () =>
-    numberVariables.map((v) => {
-      const parts = v.name.split('/');
-      const finalName = parts[parts.length - 1];
-      return { id: v.id, label: finalName };
-    }),
-  [numberVariables]
-);
-
-
-  const filteredOptions = variableOptions.filter((opt) =>
-    opt.label.toLowerCase().includes(inputValue.toLowerCase())
-  );
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsPopoverOpen(false);
-      }
-    }
-    if (isPopoverOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isPopoverOpen]);
-
-  const postUpdate = (value: number | undefined, variableId: string | null) => {
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: 'update-padding',
-          id,
-          side,
-          value, 
-          variableId,
-        },
-      },
-      '*'
-    );
-  };
-
-  const handleSelectOption = (optionId: string, label: string) => {
-    setInputValue(label);
-    postUpdate(undefined, optionId);
-    setIsPopoverOpen(false);
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => {
-      if (!isPopoverOpen) {
-        const matchedOption = variableOptions.find(
-          (v) => v.label.toLowerCase() === inputValue.toLowerCase()
-        );
-
-        if (matchedOption) {
-          postUpdate(undefined, matchedOption.id);
-        } else {
-          const parsed = parseInt(inputValue, 10);
-          if (!isNaN(parsed)) {
-            postUpdate(parsed, null);
-            setInputValue(parsed.toString());
-          } else {
-            setInputValue(initialValue.toString());
-            postUpdate(initialValue, null);
-          }
-        }
-      }
-    }, 150);
-  };
-
-  return (
-    <label
-      ref={containerRef}
-      style={{
-        display: 'inline-flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        margin: '0 1px 0 0',
-        fontSize: 12,
-        cursor: 'default',
-        whiteSpace: 'nowrap',
-        minWidth: 22,
-        position: 'relative',
-      }}
-      title={label}
-    >
-      <span
-        style={{
-          marginBottom: 2,
-          fontSize: 10,
-          color: '#555',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          width: '100%',
-          textAlign: 'center',
-        }}
-      >
-        {label}
-      </span>
-<input
-  ref={inputRef}
-className={`retro gray-bg-input ${
-  (() => {
-    const num = parseInt(inputValue, 10);
-    return !isNaN(num) && num % 2 !== 0 ? 'odd-value' : '';
-  })()
-}`}
-
-  value={inputValue}
-  onFocus={() => setIsPopoverOpen(true)}
-  onChange={(e) => setInputValue(e.target.value)}
-  onBlur={handleBlur}
-  autoComplete="off"
-/>
-
-
-{isPopoverOpen && filteredOptions.length > 0 && (
-  <div
-    style={{
-      position: 'absolute',
-      top: '100%',
-      left: 0,
-      width: '100%',
-      maxHeight: 120,
-      overflowY: 'auto',
-      background: '#fff',
-      border: '1px solid #aaa',
-      borderRadius: 4,
-      zIndex: 999,
-      boxShadow: '0px 4px 10px rgba(0,0,0,0.1)',
-    }}
-  >
-    {filteredOptions.map((option) => (
-      <div
-        key={option.id}
-        style={{
-          padding: '4px 8px',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          borderBottom: '1px solid #ddd',
-          backgroundColor: '#f9f9f9',
-        }}
-        onMouseDown={(e) => {
-          e.preventDefault(); // prevents blur
-          handleSelectOption(option.id, option.label);
-        }}
-      >
-        {option.label}
-      </div>
-    ))}
-  </div>
-)}
-
-    </label>
-  );
+function getTabDirection(currentTab: TabType, nextTab: TabType): 'forward' | 'backward' {
+  return TAB_ORDER.indexOf(nextTab) >= TAB_ORDER.indexOf(currentTab) ? 'forward' : 'backward';
 }
 
 function App() {
-  const [paddingData, setPaddingData] = React.useState<any[]>([]);
-  const [numberVariables, setNumberVariables] = React.useState<NumberVariable[]>([]);
+  const state = useAppState();
+  const bottomToolbarRef = useRef<HTMLDivElement>(null);
+  const bottomToolbarHeight = useBottomToolbarHeight(bottomToolbarRef);
+  const [displayedTab, setDisplayedTab] = useState<TabType>(state.activeTab);
+  const [tabTransitionPhase, setTabTransitionPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
+  const [tabTransitionDirection, setTabTransitionDirection] = useState<'forward' | 'backward'>('forward');
 
-  React.useEffect(() => {
-    window.onmessage = (event) => {
-      const { pluginMessage } = event.data;
-      if (pluginMessage.type === 'padding-data') setPaddingData(pluginMessage.data);
-      if (pluginMessage.type === 'number-variables') setNumberVariables(pluginMessage.data);
-    };
-  }, []);
+  // Initialize hooks
+  usePluginMessages({
+    setPaddingData: state.setPaddingData,
+    setNumberVariables: state.setNumberVariables,
+    setHasFramesSelected: state.setHasFramesSelected,
+    setHasDuplicateSelection: state.setHasDuplicateSelection,
+    setTextRecomputeRunning: state.setTextRecomputeRunning,
+    setTextRecomputeTotal: state.setTextRecomputeTotal,
+    setTextRecomputeDone: state.setTextRecomputeDone,
+    setOrphanScanRunning: state.setOrphanScanRunning,
+    setOrphanScanTotal: state.setOrphanScanTotal,
+    setOrphanScanChecked: state.setOrphanScanChecked,
+    setOrphanScanFound: state.setOrphanScanFound,
+  });
 
-  const renderDropdown = (
-    label: string,
-    value: number,
-    id: string,
-    side: 'top' | 'bottom' | 'left' | 'right'
-  ) => (
-    <PaddingDropdown
-      label={label}
-      initialValue={value}
-      id={id}
-      side={side}
-      numberVariables={numberVariables}
-    />
+  useToolbarVisibility(state.setToolbarsVisible);
+  useKeyboardShortcuts(
+    state.popupOpen,
+    state.apiUrlPopupOpen,
+    state.setPopupOpen,
+    state.setApiUrlPopupOpen
   );
 
-const renderItemSpacingDropdown = (value: number, id: string) => (
-  <PaddingDropdown
-    label="Spacing"
-    initialValue={value}
-    id={id}
-    side={'spacing' as any} // 'side' field won't be used meaningfully, but must match type
-    numberVariables={numberVariables}
-  />
-);
+  // Handlers
+  const handleSelectAutoLayout = () => {
+    state.setSelectAutoLayoutLoading(true);
+    sendSelectNextAutoLayout();
+    setTimeout(() => state.setSelectAutoLayoutLoading(false), 1000);
+  };
 
+  const handleCreateVariables = () => {
+    if (state.paddingData.length === 0) return;
+    state.setIsNamingPromptOpen(true);
+  };
 
-  const renderNode = (node: any, depth = 0): JSX.Element => {
- const indent = depth * 2;
-  const bgColor = depth % 2 === 0 ? '#fff' : '#f7f8fa';
+  const handleCreateVariablesConfirm = () => {
+    const raw = (state.prefixInput || 'padding').trim();
+    let prefix = raw.replace(/[\x00-\x1F\x7F]/g, '').replace(/\s+/g, '-');
+    if (!prefix) prefix = 'padding';
+    state.setIsNamingPromptOpen(false);
+    state.setCreateVariablesLoading(true);
+    sendCreatePaddingVariables(prefix);
+    setTimeout(() => state.setCreateVariablesLoading(false), 2000);
+  };
 
+  useEffect(() => {
+    if (state.activeTab === displayedTab && tabTransitionPhase === 'idle') return;
+    if (state.activeTab === displayedTab && tabTransitionPhase === 'enter') return;
 
-    return (
-      <div
-        key={node.id}
-        style={{
-          marginLeft: indent,
-          marginBottom: 6,
-          backgroundColor: bgColor,
-          padding: '10px 12px',
-          borderRadius: 6,
-          boxShadow:
-            depth === 0
-              ? '0 1px 4px rgba(0,0,0,0.08)'
-              : '0 1px 2px rgba(0,0,0,0.04)',
-          border: '1px solid #e0e0e0',
-          transition: 'background-color 0.3s',
-          maxWidth: 600,
-          overflowWrap: 'break-word',
-        }}
-      >
-        <strong
-          style={{
-            fontWeight: 600,
-            color: '#222',
-            fontSize: 13,
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            userSelect: 'none',
-          }}
-          onClick={() =>
-            parent.postMessage(
-              { pluginMessage: { type: 'zoom-to-node', nodeId: node.id } },
-              '*'
-            )
-          }
-        >
-          {node.name}
-        </strong>{' '}
-{node.isAutoLayout && (
-  <div
-    style={{
-      marginTop: 10,
-      display: 'flex',
-      gap: 8,
-      overflowX: 'auto',
-      alignItems: 'flex-end',
-      flexWrap: 'nowrap',
-    }}
-  >
-    {renderDropdown('Top', node.padding.top, node.id, 'top')}
-    {renderDropdown('Right', node.padding.right, node.id, 'right')}
-    {renderDropdown('Bottom', node.padding.bottom, node.id, 'bottom')}
-    {renderDropdown('Left', node.padding.left, node.id, 'left')}
-    {typeof node.itemSpacing === 'number' &&
-      renderItemSpacingDropdown(node.itemSpacing, node.id)}
-  </div>
-)}
+    setTabTransitionDirection(getTabDirection(displayedTab, state.activeTab));
+    setTabTransitionPhase('exit');
+  }, [state.activeTab, displayedTab, tabTransitionPhase]);
 
+  const renderContent = (tab: TabType) => {
+    if (tab === 'paddings' && state.paddingData.length === 0) {
+      return (
+        <EmptyState
+          randomnessLevel={state.randomnessLevel}
+          hasDuplicateSelection={state.hasDuplicateSelection}
+          hasFramesSelected={state.hasFramesSelected}
+          fixPaddingsLoading={state.fixPaddingsLoading}
+          selectAutoLayoutLoading={state.selectAutoLayoutLoading}
+          onSelectAutoLayout={handleSelectAutoLayout}
+          onArrangeNamingOpen={() => state.setArrangeNamingOpen(true)}
+        />
+      );
+    }
 
+    if (tab === 'paddings') {
+      return state.paddingData.map((node) => (
+        <PaddingNode
+          key={node.id}
+          node={node}
+          numberVariables={state.numberVariables}
+          editingNodeId={state.editingNodeId}
+          editingName={state.editingName}
+          setEditingNodeId={state.setEditingNodeId}
+          setEditingName={state.setEditingName}
+        />
+      ));
+    }
 
-        {node.children?.length > 0 && (
-          <div style={{ marginTop: 2, borderTop: '1px solid #864588', paddingTop: 6 }}>
-            {node.children.map((child: any, i: number) => (
-              <React.Fragment key={child.id}>
-                {renderNode(child, depth + 1)}
-                {i < node.children.length - 1 && (
-                  <hr
-                    style={{
-                      borderColor: '#e6e6e6',
-                      margin: '8px 0',
-                      opacity: 0.6,
-                    }}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+    if (tab === 'colors') {
+      return (
+        <ColorTab
+          hasFramesSelected={state.hasFramesSelected}
+          colorsToVarsLoading={state.colorsToVarsLoading}
+          allColorsToVarsLoading={state.allColorsToVarsLoading}
+          onColorsToVarsLoadingChange={state.setColorsToVarsLoading}
+          onAllColorsToVarsLoadingChange={state.setAllColorsToVarsLoading}
+        />
+      );
+    }
+
+    if (tab === 'buttons') {
+      return (
+        <ButtonsTab
+          orphanScanRunning={state.orphanScanRunning}
+          orphanScanTotal={state.orphanScanTotal}
+          orphanScanChecked={state.orphanScanChecked}
+          orphanScanFound={state.orphanScanFound}
+          recomputeRunning={state.textRecomputeRunning}
+          recomputeTotal={state.textRecomputeTotal}
+          recomputeDone={state.textRecomputeDone}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const handleTabPanelAnimationEnd = () => {
+    if (tabTransitionPhase === 'exit') {
+      setDisplayedTab(state.activeTab);
+      setTabTransitionPhase('enter');
+      return;
+    }
+
+    if (tabTransitionPhase === 'enter') {
+      setTabTransitionPhase('idle');
+    }
   };
 
   return (
-    <div
-      style={{
-        padding: 1,
-        margin: '0 auto',
-        fontFamily: 'Arial, sans-serif',
-      }}
-    >
-      {paddingData.length === 0 ? (
-<div className="retro-screen2 " style={{ position: 'relative' }}>
-<div className="retro-screen">
-  <div className="retro-warning-box dos-box">
+    <>
+      <TopToolbar
+        isVisible={state.toolbarsVisible}
+        paddingDataLength={state.paddingData.length}
+        selectAutoLayoutLoading={state.selectAutoLayoutLoading}
+        createVariablesLoading={state.createVariablesLoading}
+        onSelectAutoLayout={handleSelectAutoLayout}
+        onCreateVariables={handleCreateVariables}
+      />
 
-    NO VALID AUTO LAYOUT<br />
-   SELECTED
-     <span className="blinking-cursor"></span>
+      <div
+        data-main-container
+        style={{
+          margin: '0 auto',
+          paddingTop: 56,
+          paddingBottom: bottomToolbarHeight,
+          overflowY: 'auto',
+          transition: 'padding 0.2s ease',
+        }}
+      >
+        <TabNavigation activeTab={state.activeTab} onTabChange={state.setActiveTab} />
+        <div
+          className={`tab-panel tab-panel--${tabTransitionPhase} tab-panel--${tabTransitionDirection}`}
+          onAnimationEnd={handleTabPanelAnimationEnd}
+        >
+          {renderContent(displayedTab)}
+        </div>
+      </div>
 
-        <div className="dos-box">
-      👉 To continue, kindly select at least one element that uses <strong>Auto Layout</strong>.
-  </div></div>
-</div></div>
+      <BottomToolbar
+        toolbarRef={bottomToolbarRef}
+        isVisible={state.toolbarsVisible}
+        activeTab={state.activeTab}
+        paddingDataLength={state.paddingData.length}
+        randomnessLevel={state.randomnessLevel}
+        fixPaddingsLoading={state.fixPaddingsLoading}
+        onRandomnessChange={state.setRandomnessLevel}
+        onApiUrlPopupOpen={() => state.setApiUrlPopupOpen(true)}
+      />
 
-      ) : (
-        paddingData.map((node) => renderNode(node))
-      )}
+      {/* Modals */}
+      <NamingPromptModal
+        isOpen={state.isNamingPromptOpen}
+        prefixInput={state.prefixInput}
+        onClose={() => state.setIsNamingPromptOpen(false)}
+        onPrefixChange={state.setPrefixInput}
+        onCreate={handleCreateVariablesConfirm}
+        isLoading={state.createVariablesLoading}
+      />
 
-    </div>
+      <ArrangeFramesModal
+        isOpen={state.arrangeNamingOpen}
+        postfixInput={state.postfixInput}
+        randomnessLevel={state.randomnessLevel}
+        onClose={() => state.setArrangeNamingOpen(false)}
+        onPostfixChange={state.setPostfixInput}
+      />
+
+      <ApiUrlModal
+        isOpen={state.apiUrlPopupOpen}
+        apiUrl={state.apiUrl}
+        onClose={() => state.setApiUrlPopupOpen(false)}
+        onUrlChange={state.setApiUrl}
+        onResponse={state.setPopupContent}
+        onOpenResponse={() => state.setPopupOpen(true)}
+      />
+
+      <ApiResponseModal
+        isOpen={state.popupOpen}
+        content={state.popupContent}
+        onClose={() => state.setPopupOpen(false)}
+      />
+    </>
   );
 }
 

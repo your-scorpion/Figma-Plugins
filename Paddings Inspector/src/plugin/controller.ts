@@ -1,219 +1,260 @@
-figma.showUI(__html__, { width: 400, height: 600 });
+import { getAllPaddingData } from './utils/autolayout';
+import { sendNumberVariablesToUI } from './utils/variables';
+import { createPaddingVariables, handleUpdatePadding, handleUpdateItemSpacing, handleApplyRandomPaddings, handleBulkApplyDepthSpacing } from './handlers/paddingHandlers';
+import { handleArrangeFrames, handleGroupSelectedFrames, handlePairSelectedFrames, handleFindDuplicateTopLevelFrames } from './handlers/frameHandlers';
+import { handleSelectAllAutoLayout, handleSelectNextAutoLayout, handleZoomToNode, handleRenameNode } from './handlers/selectionHandlers';
+import { handleConvertColorsToVariables, handleCreateColorCollectionFromSelection, handleCreateAllColorVariables, handleAliasLocalToImportedByName } from './handlers/colorHandlers';
 
-// Helper: check if a node is Auto Layout
-function isAutoLayoutNode(
-  node: BaseNode & { layoutMode?: string }
-): node is FrameNode | ComponentNode | InstanceNode {
-  // exclude SectionNode here because it doesn't have those properties
-  return (
-    (node.type === 'FRAME' ||
-      node.type === 'COMPONENT' ||
-      node.type === 'INSTANCE') && // no SECTION here
-    (node.layoutMode === 'HORIZONTAL' || node.layoutMode === 'VERTICAL')
-  );
-}
+figma.showUI(__html__, { width: 400, height: 660 });
 
-
-// Recursively extract padding info from Auto Layout nodes
-function extractAutoLayoutInfo(
-  node: FrameNode | ComponentNode | InstanceNode | SectionNode
-): any {
-  const isAuto = isAutoLayoutNode(node); // now excludes SectionNode with layoutMode
-
-  const children = node.children
-    .filter(
-      (child): child is FrameNode | ComponentNode | InstanceNode | SectionNode =>
-        (child.type === 'FRAME' ||
-          child.type === 'COMPONENT' ||
-          child.type === 'INSTANCE' ||
-          child.type === 'SECTION') &&
-        (child.type === 'SECTION' || isAutoLayoutNode(child)) // allow SECTION children but don't assume layout props
-    )
-    .map((node) => {
+async function loadAllFontsForText(text: TextNode): Promise<void> {
   try {
-    return extractAutoLayoutInfo(node);
+    const mixed = (figma as any).mixed;
+    const chars = text.characters || '';
+    if ((text as any).fontName !== mixed) {
+      await figma.loadFontAsync((text as any).fontName as FontName);
+      return;
+    }
+    const seen = new Set<string>();
+    for (let i = 0; i < chars.length; i++) {
+      try {
+        const fn = (text as any).getRangeFontName(i, i + 1) as FontName | typeof mixed;
+        if (fn && fn !== mixed) {
+          const key = `${fn.family}__${fn.style}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            await figma.loadFontAsync({ family: fn.family, style: fn.style });
+          }
+        }
+      } catch {}
+    }
   } catch (e) {
-    console.warn('Failed to extract node:', node.id, e);
-    return null;
+    console.warn('Failed to load fonts for text node', (text as any).id, e);
   }
-})
-
-    .filter(Boolean);
-
-  if (!isAuto && children.length === 0) return null;
-
-  return {
-    id: node.id,
-    name: node.name,
-    isAutoLayout: isAuto,
-    layoutMode: isAuto ? node.layoutMode : undefined,
-    ...(isAuto && {
-      padding: {
-        top: node.paddingTop,
-        bottom: node.paddingBottom,
-        left: node.paddingLeft,
-        right: node.paddingRight,
-      },
-      itemSpacing: node.itemSpacing,
-    }),
-    children,
-  };
 }
 
-
-// Get all Auto Layout padding data from selection
-function getAllPaddingData() {
-  const selection = figma.currentPage.selection;
-  return selection
-    .filter(
-      (node): node is FrameNode | ComponentNode | InstanceNode | SectionNode =>
-        (node.type === 'FRAME' ||
-          node.type === 'COMPONENT' ||
-          node.type === 'INSTANCE' ||
-          node.type === 'SECTION') &&
-        isAutoLayoutNode(node)
-    )
-    .map(extractAutoLayoutInfo)
-    .filter(Boolean);
+async function recomputeTextLayoutOnPage(): Promise<number> {
+  const texts = figma.currentPage.findAll((n) => n.type === 'TEXT') as TextNode[];
+  figma.ui.postMessage({ type: 'text-recompute-start', total: texts.length });
+  let updated = 0;
+  for (let i = 0; i < texts.length; i++) {
+    const t = texts[i];
+    try {
+      await loadAllFontsForText(t);
+      const current = t.characters;
+      t.characters = current;
+      try {
+        (t as any).textAutoResize = (t as any).textAutoResize;
+      } catch {}
+      updated++;
+      figma.ui.postMessage({ type: 'text-recompute-progress', done: updated, total: texts.length });
+    } catch (e) {
+      console.warn('Failed to recompute text layout for', (t as any).id, e);
+    }
+  }
+  figma.ui.postMessage({ type: 'text-recompute-end', done: updated, total: texts.length });
+  return updated;
 }
 
-// Send number variable list to UI
-function sendNumberVariablesToUI() {
-  const collections = figma.variables.getLocalVariableCollections();
-  const allVariables: Variable[] = [];
+async function findOrphanedInstancesOnPage(): Promise<{ checked: number; total: number; found: number }> {
+  const instances = figma.currentPage.findAll((n) => n.type === 'INSTANCE') as InstanceNode[];
+  const total = instances.length;
+  const orphans: InstanceNode[] = [];
+  let checked = 0;
 
-  for (const collection of collections) {
-    const fullCollection = figma.variables.getVariableCollectionById(collection.id);
-    if (fullCollection) {
-      for (const varId of fullCollection.variableIds) {
-        const variable = figma.variables.getVariableById(varId);
-        if (variable) {
-          allVariables.push(variable);
-        } 
+  figma.ui.postMessage({ type: 'orphan-scan-start', total });
+
+  for (const instance of instances) {
+    try {
+      if (!instance.mainComponent) {
+        orphans.push(instance);
       }
+    } catch {
+      orphans.push(instance);
+    }
+
+    checked += 1;
+
+    if (checked === total || checked % 25 === 0) {
+      figma.ui.postMessage({
+        type: 'orphan-scan-progress',
+        checked,
+        total,
+        found: orphans.length,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
   }
 
-  const numberVars = allVariables.filter((v) => v.resolvedType === 'FLOAT');
+  figma.ui.postMessage({
+    type: 'orphan-scan-end',
+    checked,
+    total,
+    found: orphans.length,
+  });
 
+  if (orphans.length > 0) {
+    figma.currentPage.selection = orphans;
+    try {
+      figma.viewport.scrollAndZoomIntoView(orphans);
+    } catch {}
+  }
 
-const sanitizedVariables = Array.isArray(numberVars)
-  ? numberVars.map((v) => ({
-      id: v.id,
-      name: v.name,
-      key: v.key,
-    }))
-  : [];
-
-figma.ui.postMessage({
-  type: 'number-variables',
-  data: sanitizedVariables,
-});
+  return { checked, total, found: orphans.length };
 }
 
 // Initial push of variables and padding data
 (async () => {
   await sendNumberVariablesToUI();
   figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
+  const frames = figma.currentPage.selection.filter((n) => n.type === 'FRAME') as FrameNode[];
+  figma.ui.postMessage({ type: 'selection-frames', count: frames.length, hasFrames: frames.length > 0 });
 })();
 
 // Update padding data on selection change
 figma.on('selectionchange', () => {
   figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
+  const frames = figma.currentPage.selection.filter((n) => n.type === 'FRAME') as FrameNode[];
+  figma.ui.postMessage({ type: 'selection-frames', count: frames.length, hasFrames: frames.length > 0 });
 });
 
 // Handle messages from UI
 figma.ui.onmessage = async (msg) => {
-
-   if (msg.type === 'select-all-autolayout') {
-    const autoLayoutNodes = figma.root.findAll(
-      (node) =>
-        node.type === 'FRAME' &&
-        (node as FrameNode).layoutMode !== 'NONE'
-    ) as FrameNode[];
-
-    if (autoLayoutNodes.length > 0) {
-      figma.currentPage.selection = autoLayoutNodes;
-      figma.viewport.scrollAndZoomIntoView(autoLayoutNodes);
-    } else {
-      figma.notify('No Auto Layout frames found on this page.');
-    }
+  if (msg.type === 'arrange-frames') {
+    handleArrangeFrames(msg);
+    return;
   }
 
-  
+  if (msg.type === 'group-selected-frames') {
+    handleGroupSelectedFrames(msg);
+    return;
+  }
+
+  if (msg.type === 'pair-selected-frames') {
+    handlePairSelectedFrames(msg);
+    return;
+  }
+
+  if (msg.type === 'create-padding-variables') {
+    await createPaddingVariables((msg as any).namePrefix);
+    return;
+  }
+
+  if (msg.type === 'select-all-autolayout') {
+    handleSelectAllAutoLayout();
+    return;
+  }
+
+  if (msg.type === 'find-duplicate-top-level-frames') {
+    handleFindDuplicateTopLevelFrames();
+    return;
+  }
+
+  if (msg.type === 'select-next-autolayout') {
+    handleSelectNextAutoLayout(msg);
+    return;
+  }
+
   if (msg.type === 'cancel') {
     figma.closePlugin();
+    return;
   }
 
   if (msg.type === 'zoom-to-node') {
-    const node = await figma.getNodeByIdAsync(msg.nodeId);
-    if (node && 'parent' in node) {
-      figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
-      figma.currentPage.selection = [node as SceneNode];
-    }
+    await handleZoomToNode(msg);
+    return;
   }
 
-if (msg.type === 'update-padding') {
-  const { id, side, value, variableId } = msg;
-
-  figma.getNodeByIdAsync(id).then((node) => {
-    if (
-      !node ||
-      !(
-        node.type === 'FRAME' ||
-        node.type === 'COMPONENT' ||
-        node.type === 'INSTANCE'
-      ) || // no SECTION
-      !isAutoLayoutNode(node)
-    ) {
-      console.warn('Invalid node for padding update:', node);
-      return;
-    }
-
-    const sideKey = `padding${side.charAt(0).toUpperCase()}${side.slice(1)}` as
-      | 'paddingTop'
-      | 'paddingBottom'
-      | 'paddingLeft'
-      | 'paddingRight';
-
-    try {
-      if (typeof variableId === 'string') {
-        (node as any).setBoundVariable(sideKey, variableId);
-      } else if (typeof value === 'number' && !isNaN(value)) {
-        (node as any)[sideKey] = value;
-      } else {
-        console.warn('Invalid padding value:', value);
-      }
-    } catch (e) {
-      console.error(`Failed to update padding for ${id}`, e);
-    }
-  });
-}
-
+  if (msg.type === 'update-padding') {
+    handleUpdatePadding(msg);
+    return;
+  }
 
   if (msg.type === 'update-item-spacing') {
-    const { id, value, variableId } = msg;
-    const node = figma.getNodeById(id);
-    if (
-      !node ||
-      !(
-        node.type === 'FRAME' ||
-        node.type === 'COMPONENT' ||
-        node.type === 'INSTANCE' ||
-        node.type === 'SECTION'
-      ) ||
-      !isAutoLayoutNode(node)
-    )
-      return;
+    handleUpdateItemSpacing(msg);
+    return;
+  }
 
+  if (msg.type === 'rename-node') {
+    handleRenameNode(msg);
+    return;
+  }
+
+  if (msg.type === 'bulk-apply-depth-spacing') {
+    handleBulkApplyDepthSpacing();
+    return;
+  }
+
+  if (msg.type === 'apply-random-paddings') {
+    handleApplyRandomPaddings(msg);
+    return;
+  }
+
+  if (msg.type === 'convert-colors-to-variables') {
     try {
-      if (variableId) {
-        (node as any).setBoundVariable('itemSpacing', variableId);
-      } else if (typeof value === 'number') {
-        (node as any).itemSpacing = value;
+      await handleConvertColorsToVariables();
+    } catch (e) {
+      console.error('Error converting colors to variables:', e);
+      figma.notify('Error converting colors to variables');
+    }
+    return;
+  }
+
+  if (msg.type === 'create-color-collection-from-selection') {
+    try {
+      await handleCreateColorCollectionFromSelection();
+    } catch (e) {
+      console.error('Error creating color collection from selection:', e);
+      figma.notify('Error creating color collection from selection');
+    }
+    return;
+  }
+
+  if (msg.type === 'create-all-color-variables-in-collection') {
+    try {
+      await handleCreateAllColorVariables();
+    } catch (e) {
+      console.error('Error creating variables for all colors in selection:', e);
+      figma.notify('Error creating variables for all colors in selection');
+    }
+    return;
+  }
+
+  if (msg.type === 'alias-local-to-imported-by-name') {
+    try {
+      await handleAliasLocalToImportedByName();
+    } catch (e) {
+      console.error('Error aliasing variables:', e);
+      figma.notify('Error aliasing variables');
+    }
+    return;
+  }
+
+  if (msg.type === 'find-orphaned-instances') {
+    try {
+      const result = await findOrphanedInstancesOnPage();
+      if (result.found > 0) {
+        figma.notify(
+          `Checked ${result.checked} instances and found ${result.found} orphaned instances on this page`
+        );
+      } else {
+        figma.notify(`Checked ${result.checked} instances. No orphaned instances found on this page`);
       }
     } catch (e) {
-      console.error(`Failed to update itemSpacing for ${id}`, e);
+      console.error('Error finding orphaned instances:', e);
+      figma.ui.postMessage({ type: 'orphan-scan-end', checked: 0, total: 0, found: 0 });
+      figma.notify('Error finding orphaned instances');
     }
+    return;
+  }
+  if (msg.type === 'recompute-text-layout') {
+    try {
+      const count = await recomputeTextLayoutOnPage();
+      figma.notify(`Recomputed text layout for ${count} text layers`);
+    } catch (e) {
+      console.error('Error recomputing text layout:', e);
+      figma.notify('Error recomputing text layout');
+    }
+    return;
   }
 };
