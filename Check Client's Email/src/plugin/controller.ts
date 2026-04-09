@@ -1,43 +1,47 @@
-// Initialize the Figma UI with specified dimensions
-figma.showUI(__html__, { width: 340, height: 480 });
+figma.showUI(__html__, { width: 370, height: 500 });
 
-// Clear the Figma console
-console.clear();
+type CheckEmailMessage = {
+  type: 'check-email';
+  emailAddress: string;
+};
 
-// Define the message event handler
-figma.ui.onmessage = async (msg) => {
-  try {
-    if (msg.type === 'create-rectangles') {
-      const nodes = [];
+figma.ui.onmessage = async (msg: CheckEmailMessage) => {
+  if (msg.type !== 'check-email') {
+    return;
+  }
 
-      for (let i = 0; i < msg.count; i++) {
-        const rect = figma.createRectangle();
-        rect.x = i * 150;
-        rect.fills = [{ type: 'SOLID', color: { r: 1, g: 0.5, b: 0 } }];
-        figma.currentPage.appendChild(rect);
-        nodes.push(rect);
-      }
+  const emailAddress = msg.emailAddress.trim();
 
-      figma.currentPage.selection = nodes;
-      figma.viewport.scrollAndZoomIntoView(nodes);
-
-      // Respond to the UI with a success message
-      figma.ui.postMessage({
-        type: 'create-rectangles',
-        message: `Created ${msg.count} Rectangles`,
-      });
-    }
-  } catch (error) {
-    // Handle and log any errors that may occur during execution
-    console.error('Error in Figma plugin:', error);
-
-    // Respond to the UI with an error message
+  if (!emailAddress) {
     figma.ui.postMessage({
-      type: 'error',
-      message: 'An error occurred while creating rectangles',
+      type: 'check-email-result',
+      emailAddress,
+      data: null,
     });
-  } finally {
-    // Close the Figma plugin to release resources
-    figma.closePlugin();
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://disify.com/api/email/${encodeURIComponent(emailAddress)}`);
+
+    if (!response.ok) {
+      throw new Error(`Email check failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    figma.ui.postMessage({
+      type: 'check-email-result',
+      emailAddress,
+      data,
+    });
+  } catch (error) {
+    console.error('Error checking email:', error);
+
+    figma.ui.postMessage({
+      type: 'check-email-error',
+      emailAddress,
+      message: 'Unable to check this email address right now.',
+    });
   }
 };

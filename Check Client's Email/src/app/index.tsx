@@ -4,6 +4,8 @@ import App from './components/App';
 
 document.addEventListener('DOMContentLoaded', function () {
   const container = document.getElementById('react-page');
-  const root = createRoot(container);
-  root.render(<App />);
+  if (container) {
+    const root = createRoot(container);
+    root.render(<App />);
+  }
 });

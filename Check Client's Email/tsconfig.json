@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "rootDir": "./src",
     "outDir": "dist",
     "jsx": "react",
     "noUnusedLocals": true,

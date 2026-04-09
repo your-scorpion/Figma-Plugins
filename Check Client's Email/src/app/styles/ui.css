@@ -1,9 +1,19 @@
 /* Base styles */
+html,
 body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
     font: 12px sans-serif;
     text-align: center;
     overflow: hidden;
     background-color: #F8F9FB;
+}
+
+#react-page {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 /* Buttons */
