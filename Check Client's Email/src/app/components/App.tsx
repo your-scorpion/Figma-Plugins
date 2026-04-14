@@ -225,7 +225,7 @@ const App = () => {
     }, [emailAddress]);
 
   const normalizedEmail = emailAddress.trim();
-  const emptyStateText = 'Please enter an email address to continue.';
+  const emptyStateText = 'Enter an email address to continue.';
   const formatMessage = data ? (data.format ? 'This address looks valid.' : 'This address does not look valid.') : '';
   const dnsMessage = data ? (data.dns ? 'All well' : 'Invalid MX or disposable email for domain') : '';
   const conclusionMessage = data
@@ -270,10 +270,18 @@ const App = () => {
 
         <AnimatedReveal delay={120}>
           {!normalizedEmail && !errorMessage && (
-            <Box sx={{ backgroundColor: '#fff3f1', padding: '10px 12px', borderRadius: '18px', border: '1px solid rgba(215, 76, 76, 0.12)' }}>
+            <Box
+              sx={{
+                padding: '10px 12px',
+                borderRadius: '18px',
+                border: '1px solid rgba(148, 163, 184, 0.22)',
+                background: 'linear-gradient(135deg, rgba(238, 246, 255, 0.98) 0%, rgba(243, 240, 255, 0.96) 48%, rgba(233, 247, 242, 0.98) 100%)',
+                boxShadow: '0 14px 30px rgba(148, 163, 184, 0.14)',
+              }}
+            >
               <Collapse in={Boolean(!loading)}>
-                <Typography variant="body1" sx={{ color: '#D74C4C' }}>
-                  <TypewriterText text={emptyStateText} speed={18} color="#D74C4C" />
+                <Typography variant="body1" sx={{ color: '#334155', fontWeight: 500 }}>
+                  <TypewriterText text={emptyStateText} speed={18} color="#334155" />
                 </Typography>
               </Collapse>
             </Box>
