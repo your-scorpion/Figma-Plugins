@@ -32,6 +32,9 @@ export const useAppState = () => {
   const [orphanScanTotal, setOrphanScanTotal] = useState(0);
   const [orphanScanChecked, setOrphanScanChecked] = useState(0);
   const [orphanScanFound, setOrphanScanFound] = useState(0);
+  const [nodeOperationsOpen, setNodeOperationsOpen] = useState(false);
+  const [componentSearchOpen, setComponentSearchOpen] = useState(false);
+  const [selectionValidatorOpen, setSelectionValidatorOpen] = useState(false);
 
   const paddingRangeMax = useMemo(() => getPaddingRangeMax(randomnessLevel), [randomnessLevel]);
 
@@ -94,6 +97,12 @@ export const useAppState = () => {
     setIsNamingPromptOpen,
     prefixInput,
     setPrefixInput,
+    nodeOperationsOpen,
+    setNodeOperationsOpen,
+    componentSearchOpen,
+    setComponentSearchOpen,
+    selectionValidatorOpen,
+    setSelectionValidatorOpen,
     // Selection
     hasFramesSelected,
     setHasFramesSelected,

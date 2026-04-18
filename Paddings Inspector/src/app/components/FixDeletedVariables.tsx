@@ -1,5 +1,4 @@
 import React from 'react';
-import '../styles/ui.css';
 import '../styles/colors-actions.css';
 
 interface FixDeletedVariablesProps {
@@ -10,7 +9,18 @@ export const FixDeletedVariables: React.FC<FixDeletedVariablesProps> = ({ hasFra
   const [loading, setLoading] = React.useState(false);
 
   return (
-    <div className="panel-container">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        padding: '10px 12px',
+        background: 'linear-gradient(180deg, rgba(20,24,36,0.65), rgba(12,14,22,0.65))',
+        border: '1px solid rgba(255,255,255,0.12)',
+        borderRadius: 12,
+        boxShadow: '0 6px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)',
+      }}
+    >
       <button
         onClick={() => {
           if (loading || !hasFramesSelected) return;
@@ -42,9 +52,24 @@ export const FixDeletedVariables: React.FC<FixDeletedVariablesProps> = ({ hasFra
         )}
         Fix deleted variables. Ignore HEX.
       </button>
-      <div className="panel-note">
-        <span className="panel-note-indicator" />
-        <span className="panel-note-text">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          color: 'rgba(255,255,255,0.85)',
+        }}
+      >
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #00FFA2, #AF52DE)',
+            boxShadow: '0 0 6px rgba(175,82,222,0.5)',
+          }}
+        />
+        <span style={{ fontSize: 12, lineHeight: 1.4 }}>
           Have you found a deleted colour variable that has been assigned? This button will create a new variable and reassign it.
         </span>
       </div>

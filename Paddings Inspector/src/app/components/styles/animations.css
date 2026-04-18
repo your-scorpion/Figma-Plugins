@@ -257,8 +257,8 @@ input[type="range"]::-ms-track {
 @keyframes tabSlideInForward {
   0% {
     opacity: 0;
-    transform: translate3d(22px, 0, 0) scale(0.985);
-    filter: blur(10px);
+    transform: translate3d(12px, 0, 0) scale(0.99);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
@@ -270,8 +270,8 @@ input[type="range"]::-ms-track {
 @keyframes tabSlideInBackward {
   0% {
     opacity: 0;
-    transform: translate3d(-22px, 0, 0) scale(0.985);
-    filter: blur(10px);
+    transform: translate3d(-12px, 0, 0) scale(0.99);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
@@ -288,8 +288,8 @@ input[type="range"]::-ms-track {
   }
   100% {
     opacity: 0;
-    transform: translate3d(-18px, 0, 0) scale(0.992);
-    filter: blur(8px);
+    transform: translate3d(-10px, 0, 0) scale(0.98);
+    filter: blur(3px);
   }
 }
 
@@ -301,7 +301,7 @@ input[type="range"]::-ms-track {
   }
   100% {
     opacity: 0;
-    transform: translate3d(18px, 0, 0) scale(0.992);
-    filter: blur(8px);
+    transform: translate3d(10px, 0, 0) scale(0.98);
+    filter: blur(3px);
   }
 }

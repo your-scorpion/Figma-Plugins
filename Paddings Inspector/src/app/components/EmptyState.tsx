@@ -20,6 +20,31 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onSelectAutoLayout,
   onArrangeNamingOpen,
 }) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const tooltipTimerRef = React.useRef<number | null>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.boxShadow = '0 0 16px rgba(48,255,120,0.35), 0 0 24px rgba(175,82,222,0.25), inset 0 1px rgba(255,255,255,0.3)';
+    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(48,255,120,0.28), rgba(175,82,222,0.26))';
+
+    // Show tooltip after delay
+    tooltipTimerRef.current = window.setTimeout(() => {
+      setShowTooltip(true);
+    }, 800);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.boxShadow = 'inset 0 1px rgba(255,255,255,0.3)';
+    e.currentTarget.style.background = 'linear-gradient(45deg, rgba(140,120,255,0.3), rgba(140,120,255,0.1), rgba(255,255,255,0.05))';
+
+    // Clear timer and hide tooltip
+    if (tooltipTimerRef.current) {
+      clearTimeout(tooltipTimerRef.current);
+      tooltipTimerRef.current = null;
+    }
+    setShowTooltip(false);
+  };
+
   return (
     <div className="quantum-hover-delay" style={{ position: 'relative', minHeight: '100%', overflow: 'hidden' }}>
       {/* Hyperdimensional Background */}
@@ -137,70 +162,105 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           }}
         >
           {/* Quantum Icon */}
-          <div
-            className="fractal-rotation"
-            role="button"
-            tabIndex={0}
-            title="Select next auto layout frame on page"
-            aria-label="Select Auto Layout"
-            onClick={onSelectAutoLayout}
-            onKeyDown={(e) => {
-              if ((e.key === 'Enter' || e.key === ' ') && !selectAutoLayoutLoading) {
-                e.preventDefault();
-                onSelectAutoLayout();
-              }
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 16px rgba(48,255,120,0.35), 0 0 24px rgba(175,82,222,0.25), inset 0 1px rgba(255,255,255,0.3)';
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(48,255,120,0.28), rgba(175,82,222,0.26))';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = 'inset 0 1px rgba(255,255,255,0.3)';
-              e.currentTarget.style.background = 'linear-gradient(45deg, rgba(140,120,255,0.3), rgba(140,120,255,0.1), rgba(255,255,255,0.05))';
-            }}
-            style={{
-              margin: '0 auto 16px',
-              width: 'calc(40px + sin(0) * 6px)',
-              height: 'calc(40px + cos(0) * 6px)',
-              borderRadius: 'calc(12px + sin(0) * 3px)',
-              background: `
-                linear-gradient(calc(45deg + sin(0) * 90deg), 
-                  rgba(140,120,255,0.3), 
-                  rgba(140,120,255,0.1),
-                  rgba(255,255,255,0.05)
-                )
-              `,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'inset 0 1px rgba(255,255,255,0.3)',
-              transform: 'perspective(500px) rotateZ(calc(sin(0) * 5deg))',
-              cursor: 'pointer',
-              userSelect: 'none',
-              outline: 'none',
-              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          >
-            <svg
-              className="quantum-float"
-              width="calc(20px + sin(0) * 4px)"
-              height="calc(20px + cos(0) * 4px)"
-              viewBox="0 0 24 24"
-              fill="none"
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div
+              className="fractal-rotation"
+              role="button"
+              tabIndex={0}
+              aria-label="Select Auto Layout"
+              onClick={selectAutoLayoutLoading ? undefined : onSelectAutoLayout}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && !selectAutoLayoutLoading) {
+                  e.preventDefault();
+                  onSelectAutoLayout();
+                }
+              }}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
               style={{
-                filter: 'drop-shadow(0 0 4px rgba(200,200,255,0.5))',
+                margin: '0 auto 16px',
+                width: 'calc(40px + sin(0) * 6px)',
+                height: 'calc(40px + cos(0) * 6px)',
+                borderRadius: 'calc(12px + sin(0) * 3px)',
+                background: `
+                  linear-gradient(calc(45deg + sin(0) * 90deg),
+                    rgba(140,120,255,0.3),
+                    rgba(140,120,255,0.1),
+                    rgba(255,255,255,0.05)
+                  )
+                `,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'inset 0 1px rgba(255,255,255,0.3)',
+                transform: 'perspective(500px) rotateZ(calc(sin(0) * 5deg))',
+                cursor: selectAutoLayoutLoading ? 'default' : 'pointer',
+                userSelect: 'none',
+                outline: 'none',
+                transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: selectAutoLayoutLoading ? 0.7 : 1,
               }}
             >
-              <path
-                d="M4 12h16M12 4v16"
-                stroke="rgba(220,220,255,0.95)"
-                strokeWidth="1.8"
-                strokeLinecap="round"
+              {selectAutoLayoutLoading ? (
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    border: '2px solid rgba(140,120,255,0.3)',
+                    borderTop: '2px solid rgba(220,220,255,0.95)',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                  }}
+                />
+              ) : (
+                <svg
+                  className="quantum-float"
+                  width="calc(20px + sin(0) * 4px)"
+                  height="calc(20px + cos(0) * 4px)"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{
+                    filter: 'drop-shadow(0 0 4px rgba(200,200,255,0.5))',
+                  }}
+                >
+                  <path
+                    d="M4 12h16M12 4v16"
+                    stroke="rgba(220,220,255,0.95)"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    style={{
+                      filter: 'drop-shadow(0 0 2px rgba(140,120,255,0.8))',
+                    }}
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Tooltip */}
+            {showTooltip && !selectAutoLayoutLoading && (
+              <div
                 style={{
-                  filter: 'drop-shadow(0 0 2px rgba(140,120,255,0.8))',
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  marginTop: 8,
+                  padding: '8px 12px',
+                  background: 'rgba(20, 20, 30, 0.98)',
+                  border: '1px solid rgba(140,120,255,0.4)',
+                  borderRadius: 8,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4), 0 0 20px rgba(140,120,255,0.2)',
+                  whiteSpace: 'nowrap',
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.9)',
+                  zIndex: 1000,
+                  pointerEvents: 'none',
+                  animation: 'fadeIn 0.2s ease-out',
                 }}
-              />
-            </svg>
+              >
+                Click to jump to the next Auto Layout frame on your page
+              </div>
+            )}
           </div>
 
           {/* Quantum Text */}

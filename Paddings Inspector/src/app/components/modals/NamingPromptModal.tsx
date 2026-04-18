@@ -37,35 +37,35 @@ export const NamingPromptModal: React.FC<NamingPromptModalProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0,0,0,0.45)',
+        background: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 10001,
-        backdropFilter: 'blur(2px)',
+        zIndex: 10000,
       }}
       onClick={onClose}
     >
       <div
         style={{
-          width: 340,
-          maxWidth: '90%',
-          background: '#111',
-          border: '1px solid rgba(255,255,255,0.12)',
+          maxWidth: 500,
+          width: '90%',
+          background: '#2a2a2a',
+          border: '1px solid #444',
           borderRadius: 12,
-          boxShadow: '0 12px 28px rgba(0,0,0,0.5)',
-          padding: 16,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          padding: 20,
           color: '#fff',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+        <div style={{ fontSize: 22, fontWeight: 600, marginBottom: 8, color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
           Name your variables
         </div>
-        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginBottom: 12, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif' }}>
           Prefix for variable names. They will look like{' '}
-          <code>{prefixInput || DEFAULT_PREFIX}-8</code>,{' '}
-          <code>{prefixInput || DEFAULT_PREFIX}-16</code>.
+          <code style={{ background: '#333', padding: '3px 8px', borderRadius: 3, fontSize: 12 }}>{prefixInput || DEFAULT_PREFIX}-8</code>,{' '}
+          <code style={{ background: '#333', padding: '3px 8px', borderRadius: 3, fontSize: 12 }}>{prefixInput || DEFAULT_PREFIX}-16</code>.
         </div>
         <input
           type="text"
@@ -74,14 +74,15 @@ export const NamingPromptModal: React.FC<NamingPromptModalProps> = ({
           placeholder="e.g. spacing, padding, gap"
           style={{
             width: '100%',
-            padding: '8px 10px',
-            borderRadius: 8,
-            border: '1px solid rgba(255,255,255,0.15)',
-            background: '#0c0c0c',
+            padding: 10,
+            borderRadius: 4,
+            border: '1px solid #555',
+            background: '#333',
             color: '#fff',
             fontSize: 13,
             outline: 'none',
             marginBottom: 12,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
           }}
         />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -89,12 +90,20 @@ export const NamingPromptModal: React.FC<NamingPromptModalProps> = ({
             type="button"
             onClick={onClose}
             style={{
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.06)',
-              color: '#fff',
+              padding: '12px 20px',
+              fontSize: '13.5px',
+              fontWeight: 500,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
+              letterSpacing: '0.02em',
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%)',
+              color: 'rgba(255,255,255,0.95)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 18px rgba(0,0,0,0.35), inset 0 0.5px 1px rgba(255,255,255,0.25)',
               cursor: 'pointer',
+              transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.3s ease',
+              whiteSpace: 'nowrap',
+              backdropFilter: 'blur(30px) saturate(160%)',
             }}
           >
             Cancel
@@ -104,13 +113,27 @@ export const NamingPromptModal: React.FC<NamingPromptModalProps> = ({
             onClick={handleCreate}
             disabled={isLoading}
             style={{
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: '1px solid rgba(120,80,255,0.5)',
-              background: 'linear-gradient(145deg, rgba(120,80,255,0.45), rgba(80,0,255,0.35))',
-              color: '#fff',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: 500,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
+              letterSpacing: '0.02em',
+              background: isLoading
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)'
+                : 'linear-gradient(145deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
+              color: isLoading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.95)',
+              border: isLoading
+                ? '1px solid rgba(255,255,255,0.05)'
+                : '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '12px',
+              boxShadow: isLoading
+                ? 'inset 0 0 2px rgba(255,255,255,0.05), inset 0 -1px 3px rgba(0,0,0,0.15)'
+                : '0 8px 18px rgba(0,0,0,0.35), inset 0 0.5px 1px rgba(255,255,255,0.25)',
               cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.6 : 1,
+              transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.3s ease',
+              opacity: isLoading ? 0.4 : 1,
+              whiteSpace: 'nowrap',
+              backdropFilter: 'blur(30px) saturate(160%)',
             }}
           >
             {isLoading ? 'Creating...' : 'Create'}

@@ -285,19 +285,19 @@ button:focus {
 }
 
 .tab-panel--enter.tab-panel--forward {
-  animation: tabSlideInForward 280ms cubic-bezier(.22,1,.36,1);
+  animation: tabSlideInForward 240ms cubic-bezier(.22,1,.36,1);
 }
 
 .tab-panel--enter.tab-panel--backward {
-  animation: tabSlideInBackward 280ms cubic-bezier(.22,1,.36,1);
+  animation: tabSlideInBackward 240ms cubic-bezier(.22,1,.36,1);
 }
 
 .tab-panel--exit.tab-panel--forward {
-  animation: tabSlideOutForward 200ms cubic-bezier(.4,0,1,1);
+  animation: tabSlideOutForward 180ms cubic-bezier(.4,0,.6,1);
 }
 
 .tab-panel--exit.tab-panel--backward {
-  animation: tabSlideOutBackward 200ms cubic-bezier(.4,0,1,1);
+  animation: tabSlideOutBackward 180ms cubic-bezier(.4,0,.6,1);
 }
 
 .paddings-editor {

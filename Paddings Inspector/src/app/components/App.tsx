@@ -17,6 +17,9 @@ import { NamingPromptModal } from './modals/NamingPromptModal';
 import { ArrangeFramesModal } from './modals/ArrangeFramesModal';
 import { ApiUrlModal } from './modals/ApiUrlModal';
 import { ApiResponseModal } from './modals/ApiResponseModal';
+import { NodeOperationsModal } from './modals/NodeOperationsModal';
+import { ComponentSearchModal } from './modals/ComponentSearchModal';
+import { SelectionValidatorModal } from './modals/SelectionValidatorModal';
 import { sendSelectNextAutoLayout, sendCreatePaddingVariables } from './utils/pluginMessages';
 import { TabType } from './types';
 
@@ -138,6 +141,10 @@ function App() {
           recomputeRunning={state.textRecomputeRunning}
           recomputeTotal={state.textRecomputeTotal}
           recomputeDone={state.textRecomputeDone}
+          onApiUrlPopupOpen={() => state.setApiUrlPopupOpen(true)}
+          onNodeOperationsOpen={() => state.setNodeOperationsOpen(true)}
+          onComponentSearchOpen={() => state.setComponentSearchOpen(true)}
+          onSelectionValidatorOpen={() => state.setSelectionValidatorOpen(true)}
         />
       );
     }
@@ -175,6 +182,7 @@ function App() {
           paddingTop: 56,
           paddingBottom: bottomToolbarHeight,
           overflowY: 'auto',
+          overflowX: 'hidden',
           transition: 'padding 0.2s ease',
         }}
       >
@@ -195,7 +203,6 @@ function App() {
         randomnessLevel={state.randomnessLevel}
         fixPaddingsLoading={state.fixPaddingsLoading}
         onRandomnessChange={state.setRandomnessLevel}
-        onApiUrlPopupOpen={() => state.setApiUrlPopupOpen(true)}
       />
 
       {/* Modals */}
@@ -229,6 +236,21 @@ function App() {
         isOpen={state.popupOpen}
         content={state.popupContent}
         onClose={() => state.setPopupOpen(false)}
+      />
+
+      <NodeOperationsModal
+        isOpen={state.nodeOperationsOpen}
+        onClose={() => state.setNodeOperationsOpen(false)}
+      />
+
+      <ComponentSearchModal
+        isOpen={state.componentSearchOpen}
+        onClose={() => state.setComponentSearchOpen(false)}
+      />
+
+      <SelectionValidatorModal
+        isOpen={state.selectionValidatorOpen}
+        onClose={() => state.setSelectionValidatorOpen(false)}
       />
     </>
   );

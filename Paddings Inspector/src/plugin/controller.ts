@@ -4,6 +4,7 @@ import { createPaddingVariables, handleUpdatePadding, handleUpdateItemSpacing, h
 import { handleArrangeFrames, handleGroupSelectedFrames, handlePairSelectedFrames, handleFindDuplicateTopLevelFrames } from './handlers/frameHandlers';
 import { handleSelectAllAutoLayout, handleSelectNextAutoLayout, handleZoomToNode, handleRenameNode } from './handlers/selectionHandlers';
 import { handleConvertColorsToVariables, handleCreateColorCollectionFromSelection, handleCreateAllColorVariables, handleAliasLocalToImportedByName } from './handlers/colorHandlers';
+import { handleMcpNodeOperation, handleMcpComponentSearch, handleMcpGetSelection, handleMcpGetCurrentSelection } from './handlers/mcpHandlers';
 
 figma.showUI(__html__, { width: 400, height: 660 });
 
@@ -116,6 +117,20 @@ figma.on('selectionchange', () => {
   figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
   const frames = figma.currentPage.selection.filter((n) => n.type === 'FRAME') as FrameNode[];
   figma.ui.postMessage({ type: 'selection-frames', count: frames.length, hasFrames: frames.length > 0 });
+
+  // Send selected node ID for MCP tools
+  const selection = figma.currentPage.selection;
+  if (selection.length > 0) {
+    figma.ui.postMessage({
+      type: 'mcp_selection_changed',
+      data: { nodeId: selection[0].id }
+    });
+  } else {
+    figma.ui.postMessage({
+      type: 'mcp_selection_changed',
+      data: null
+    });
+  }
 });
 
 // Handle messages from UI
@@ -255,6 +270,27 @@ figma.ui.onmessage = async (msg) => {
       console.error('Error recomputing text layout:', e);
       figma.notify('Error recomputing text layout');
     }
+    return;
+  }
+
+  // MCP Tools handlers
+  if (msg.type === 'mcp_node_operation') {
+    await handleMcpNodeOperation(msg);
+    return;
+  }
+
+  if (msg.type === 'mcp_component_search') {
+    await handleMcpComponentSearch(msg);
+    return;
+  }
+
+  if (msg.type === 'mcp_get_selection') {
+    handleMcpGetSelection(msg);
+    return;
+  }
+
+  if (msg.type === 'mcp_get_current_selection') {
+    handleMcpGetCurrentSelection();
     return;
   }
 };

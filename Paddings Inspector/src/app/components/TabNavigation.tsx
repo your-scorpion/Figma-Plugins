@@ -26,7 +26,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({
           onChange={() => onTabChange('colors')}
         />
         <SegmentRadio
-          label="Buttons"
+          label="More"
           value="buttons"
           checked={activeTab === 'buttons'}
           onChange={() => onTabChange('buttons')}

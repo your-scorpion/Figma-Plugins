@@ -11,7 +11,6 @@ type BottomToolbarProps = {
   randomnessLevel: number;
   fixPaddingsLoading: boolean;
   onRandomnessChange: (level: number) => void;
-  onApiUrlPopupOpen: () => void;
 };
 
 export const BottomToolbar: React.FC<BottomToolbarProps> = ({
@@ -22,7 +21,6 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
   randomnessLevel,
   fixPaddingsLoading,
   onRandomnessChange,
-  onApiUrlPopupOpen,
 }) => {
   const paddingRangeMax = getPaddingRangeMax(randomnessLevel);
 
@@ -45,30 +43,6 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
         transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
-      {activeTab === 'colors' && (
-        <button
-          onClick={onApiUrlPopupOpen}
-          title="Open API URL input"
-          style={{
-            padding: '12px 20px',
-            fontSize: '13.5px',
-            fontWeight: 500,
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-            letterSpacing: '0.02em',
-            background: 'linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))',
-            color: 'rgba(255,255,255,0.95)',
-            border: '1px solid rgba(255,255,255,0.18)',
-            borderRadius: '12px',
-            boxShadow: '0 8px 18px rgba(0,0,0,0.35), inset 0 0.5px 1px rgba(255,255,255,0.25)',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          API Test
-        </button>
-      )}
-
       {activeTab === 'paddings' && (
         <>
           <button
