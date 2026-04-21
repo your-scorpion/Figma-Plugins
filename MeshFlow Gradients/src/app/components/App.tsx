@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-const html2canvas = require('html2canvas');
 import { NextUIProvider } from '@nextui-org/react';
 import { Button, Loading } from '@nextui-org/react';
 import { Grid } from '@nextui-org/react';
@@ -9,9 +8,55 @@ import { CopyDocumentIcon } from './CopyDocumentIcon';
 import { CopyDocumentIcon2 } from './CopyDocumentIcon33';
 import { Tooltip, Progress, Card } from '@nextui-org/react';
 
+type MeshNode = d3.SimulationNodeDatum & {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+};
+
+type MeshLink = d3.SimulationLinkDatum<MeshNode> & {
+  id: string;
+  source: string | MeshNode;
+  target: string | MeshNode;
+};
+
+type NodeStyle = {
+  id: string;
+  radius: number;
+  opacity: number;
+  fill: string;
+  order: number;
+};
+
+type LinkStyle = {
+  id: string;
+  width: number;
+  opacity: number;
+  stroke: string;
+};
+
+type MeshScene = {
+  width: number;
+  height: number;
+  nodes: MeshNode[];
+  links: MeshLink[];
+  nodeStyles: Map<string, NodeStyle>;
+  linkStyles: Map<string, LinkStyle>;
+  drawOrder: string[];
+};
+
+type MeshSettings = {
+  linkColor: string;
+  customColor: string;
+  activeButton: string;
+  selectedBlurValue: string;
+  selectedSizeValue: string;
+  selectedDepthValue: string;
+};
+
 function App() {
-  const [capturedDataURL, setCapturedDataURL] = useState(null); // State variable to store the captured data URL
-  const svgRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorInputRef = useRef<HTMLInputElement | null>(null);
   const [linkColor, setLinkColor] = useState('#065372'); // State variable to keep track of the link color
   const [simulationChecked, setSimulationChecked] = useState(false); // State variable to track checkbox checked state
@@ -20,6 +65,16 @@ function App() {
   const [customColor, setCustomColor] = useState('#000000');
   const [regenerationTrigger, setRegenerationTrigger] = useState(0);
   const simulationRef = useRef<any>(null);
+  const sceneRef = useRef<MeshScene | null>(null);
+  const dragStateRef = useRef<{ nodeId: string | null; pointerId: number | null }>({ nodeId: null, pointerId: null });
+  const settingsRef = useRef<MeshSettings>({
+    linkColor: '#065372',
+    customColor: '#000000',
+    activeButton: 'randomColor',
+    selectedBlurValue: 'High',
+    selectedSizeValue: 'X-Large',
+    selectedDepthValue: 'Original',
+  });
   const [selected, setSelected] = React.useState<Set<string>>(new Set(['9']));
   const [selectedSize, setSelectedSize] = React.useState<Set<string>>(new Set(['X-Large']));
   const [selectedBlur, setSelectedBlur] = React.useState<Set<string>>(new Set(['High']));
@@ -37,6 +92,12 @@ function App() {
     if (key === 'random') return 'Random';
     return 'Original';
   }, [selectedDepth]);
+  const colorModeLabel = React.useMemo(() => {
+    if (activeButton === 'randomColor2') return 'Single Hue';
+    if (activeButton === 'gradient') return 'Gradient';
+    if (activeButton === 'customColor') return 'Custom';
+    return 'Random';
+  }, [activeButton]);
 
   function getRandomColor() {
     const excludeHues = [30, 60, 90, 120]; // Exclude orange, yellow, and green hues
@@ -144,6 +205,33 @@ function App() {
     setSimulationChecked(false);
   };
 
+  const handleColorModeChange = (keys: Set<string>) => {
+    const keysSet = keys instanceof Set ? keys : new Set(Array.isArray(keys) ? keys : []);
+    const mode = Array.from(keysSet)[0];
+
+    if (mode === 'randomColor') {
+      recolorLinks(false);
+      return;
+    }
+
+    if (mode === 'randomColor2') {
+      recolorLinks(true);
+      return;
+    }
+
+    if (mode === 'gradient') {
+      setGradientMode();
+      return;
+    }
+
+    if (mode === 'customColor') {
+      setActiveButton('customColor');
+      setLinkColor(customColor);
+      setSimulationChecked(false);
+      colorInputRef.current?.click();
+    }
+  };
+
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });
@@ -248,56 +336,30 @@ function App() {
     handleContextAction(k);
   };
 
-  let capturedDataURLData = capturedDataURL;
-  console.log(typeof capturedDataURLData);
-
-  //let base64value = _base64ToUint8Array(base64Data);
-
   const onCreate = () => {
-    setIsLoading(true); // Set loading state to true
-
-    setTimeout(() => {
-      setIsLoading(false); // Set loading state to false after 1 second
-    }, 1000);
+    setIsLoading(true);
 
     const count = 1;
-    captureGraph() // Capture the graph
-      .then(function (base64Data) {
-        // Double the width and height of the canvas
-        const canvas = document.createElement('canvas');
-        const img = new Image();
-        img.onload = function () {
-          canvas.width = img.width * 2;
-          canvas.height = img.height * 2;
-
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
-
-          const capturedBase64Data = canvas.toDataURL('image/png');
-
-          // Trigger the creation event and pass the captured data
-          parent.postMessage(
-            {
-              pluginMessage: {
-                type: 'create-rectangles',
-                count,
-                capturedDataURLData: capturedBase64Data,
-                width: img.width, // Use captured image width
-                height: img.height, // Use captured image height
-              },
+    captureGraph()
+      .then(function (captureResult: any) {
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: 'create-rectangles',
+              count,
+              capturedDataURLData: captureResult.dataURL,
+              width: captureResult.width,
+              height: captureResult.height,
             },
-            '*'
-          );
-        };
-        img.onerror = function (error) {
-          console.error('Failed to load captured image:', error);
-          setIsLoading(false);
-        };
-        img.src = base64Data as string; // Explicitly cast base64Data to string
+          },
+          '*'
+        );
+
+        setIsLoading(false);
       })
       .catch(function (error) {
-        // Handle the error if necessary
         console.error('An error occurred during graph capture:', error);
+        setIsLoading(false);
       });
   };
 
@@ -310,106 +372,6 @@ function App() {
       }
     };
   }, []);
-
-  let css22 = 'blur(4%)';
-  const captureGraph = () => {
-    return new Promise((resolve, reject) => {
-      const svgElement = svgRef.current;
-      svgElement.style.filter = css22;
-
-      const handleSvgInteraction = () => {
-        setSimulationChecked(false); // Update the state to uncheck the checkbox
-      };
-
-      svgElement.style.cursor = 'all-scroll';
-
-      svgElement.addEventListener('click', handleSvgInteraction);
-      svgElement.addEventListener('mousedown', handleSvgInteraction);
-      svgElement.addEventListener('mouseup', handleSvgInteraction);
-      svgElement.addEventListener('mousedown', handleSvgInteraction);
-
-      // Apply filters to the SVG element before capturing
-      //svgElement.style.filter = css22;
-
-      const rect = svgElement.getBoundingClientRect();
-      html2canvas(svgElement, {
-        width: rect.width,
-        height: rect.height,
-        scrollX: 0,
-        scrollY: 0,
-        x: rect.left,
-        y: rect.top,
-        backgroundColor: null
-      })
-        .then(function (canvas) {
-          const dataURL = canvas.toDataURL('image/png');
-          setCapturedDataURL(dataURL);
-          resolve(dataURL); // Resolve the promise with the data URL
-        })
-        .catch(function (error) {
-          reject(error); // Reject the promise with the error
-        })
-        .finally(function () {
-          // Reset the filters after capturing
-          svgElement.style.filter = '';
-        });
-    });
-  };
-
-  const randomizeZIndex = () => {
-    const svg = d3.select(svgRef.current);
-    const nodesSelection = svg.selectAll('.node');
-    // @ts-ignore d3 selections have .nodes() at runtime
-    const nodeArray: Element[] = nodesSelection.nodes ? nodesSelection.nodes() : Array.from(nodesSelection as any);
-    if (!nodeArray || nodeArray.length === 0) {
-      return;
-    }
-    nodeArray.sort(() => Math.random() - 0.5);
-    nodeArray.forEach((node) => {
-      d3.select(node).raise();
-    });
-  };
-
-  const applyDepthMode = (mode: string) => {
-    const svg = d3.select(svgRef.current);
-    const nodesSelection = svg.selectAll('.node');
-    // @ts-ignore d3 selections have .nodes() at runtime
-    const nodeArray: Element[] = nodesSelection.nodes ? nodesSelection.nodes() : Array.from(nodesSelection as any);
-    if (!nodeArray || nodeArray.length === 0) {
-      return;
-    }
-
-    if (mode === 'random') {
-      randomizeZIndex();
-      return;
-    }
-
-    const sorted = [...nodeArray];
-
-    if (mode === 'original') {
-      sorted.sort((a, b) => {
-        const aOrder = parseInt(a.getAttribute('data-order') || '0', 10);
-        const bOrder = parseInt(b.getAttribute('data-order') || '0', 10);
-        return aOrder - bOrder;
-      });
-    } else if (mode === 'large-front') {
-      sorted.sort((a, b) => {
-        const ra = parseFloat(a.getAttribute('r') || '0');
-        const rb = parseFloat(b.getAttribute('r') || '0');
-        return ra - rb; // small first, big last (top)
-      });
-    } else if (mode === 'small-front') {
-      sorted.sort((a, b) => {
-        const ra = parseFloat(a.getAttribute('r') || '0');
-        const rb = parseFloat(b.getAttribute('r') || '0');
-        return rb - ra; // big first, small last (top)
-      });
-    }
-
-    sorted.forEach((node) => {
-      d3.select(node).raise();
-    });
-  };
 
   const getNodeRadius = (sizeValue: string) => {
     switch (sizeValue) {
@@ -443,328 +405,590 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+  const getCanvasContext = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return null;
+    }
 
-    d3.select(svgRef.current).selectAll('*').remove();
+    return canvas.getContext('2d');
+  };
 
-    captureGraph()
-      .then(function (base64Data) {
-        const capturedBase64Data = base64Data;
-        return capturedBase64Data;
-      })
-      .catch(function (error) {
-        // Handle the error if necessary
-        console.error('An error occurred during graph capture:', error);
-      });
+  const updateCanvasSize = (width: number, height: number) => {
+    const canvas = canvasRef.current;
+    const context = getCanvasContext();
+    if (!canvas || !context) {
+      return null;
+    }
 
-    /*const nodes = [
-      { id: 'node1', x: 200, y: 200 },
-      { id: 'node2', x: 0, y: 100 },
-      { id: 'node3', x: 400, y: 200 },
-    ];*/
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const pixelWidth = Math.floor(width * devicePixelRatio);
+    const pixelHeight = Math.floor(height * devicePixelRatio);
 
-    const svg = d3
-      .select(svgRef.current)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .style('background-color', '#E9E3FF');
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+    }
 
-    const numNodes = parseInt(selectedValue, 10);
+    context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    return context;
+  };
 
-    const nodes = Array.from({ length: numNodes }, (_, i) => ({
-      id: `node${i + 1}`,
-      x: Math.random() * width, // Random x-coordinate within the width of the SVG
-      y: Math.random() * height, // Random y-coordinate within the height of the SVG
-      label: `Node ${i + 1}`,
-    }));
+  const resolveLinkNode = (endpoint: string | MeshNode, nodesById: Map<string, MeshNode>) => {
+    if (typeof endpoint === 'string') {
+      return nodesById.get(endpoint) || null;
+    }
 
-    const links = [];
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        links.push({ source: nodes[i].id, target: nodes[j].id });
+    return endpoint;
+  };
+
+  const drawScene = () => {
+    const scene = sceneRef.current;
+    const settings = settingsRef.current;
+    if (!scene) {
+      return;
+    }
+
+    const context = updateCanvasSize(scene.width, scene.height);
+    if (!context) {
+      return;
+    }
+
+    const blurValues = getBlurValues(settings.selectedBlurValue);
+    const nodesById = new Map(scene.nodes.map((node) => [node.id, node]));
+
+    context.clearRect(0, 0, scene.width, scene.height);
+    context.fillStyle = '#E9E3FF';
+    context.fillRect(0, 0, scene.width, scene.height);
+
+    context.save();
+    context.filter = `${blurValues.link} contrast(130%) brightness(220%) saturate(153%)`;
+    scene.links.forEach((link) => {
+      const sourceNode = resolveLinkNode(link.source, nodesById);
+      const targetNode = resolveLinkNode(link.target, nodesById);
+      const style = scene.linkStyles.get(link.id);
+      if (!sourceNode || !targetNode || !style) {
+        return;
       }
+
+      const dx = targetNode.x - sourceNode.x;
+      const dy = targetNode.y - sourceNode.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const midpointX = (sourceNode.x + targetNode.x) / 2;
+      const midpointY = (sourceNode.y + targetNode.y) / 2;
+      const normalX = -dy / distance;
+      const normalY = dx / distance;
+      const curveOffset = Math.min(120, distance * 0.2);
+
+      context.beginPath();
+      context.moveTo(sourceNode.x, sourceNode.y);
+      context.quadraticCurveTo(
+        midpointX + normalX * curveOffset,
+        midpointY + normalY * curveOffset,
+        targetNode.x,
+        targetNode.y
+      );
+      context.globalAlpha = style.opacity;
+      context.lineWidth = style.width;
+      context.strokeStyle = style.stroke;
+      context.stroke();
+    });
+    context.restore();
+
+    context.save();
+    context.filter = `${blurValues.node} contrast(130%) brightness(120%) saturate(153%)`;
+    const orderedIds = scene.drawOrder.length ? scene.drawOrder : scene.nodes.map((node) => node.id);
+    orderedIds.forEach((nodeId) => {
+      const node = nodesById.get(nodeId);
+      const style = scene.nodeStyles.get(nodeId);
+      if (!node || !style) {
+        return;
+      }
+
+      context.beginPath();
+      context.arc(node.x, node.y, style.radius, 0, Math.PI * 2);
+      context.globalAlpha = style.opacity;
+      context.fillStyle = style.fill;
+      context.fill();
+    });
+    context.restore();
+    context.globalAlpha = 1;
+  };
+
+  const syncNodeColors = () => {
+    const scene = sceneRef.current;
+    const settings = settingsRef.current;
+    if (!scene) {
+      return;
     }
 
-    const getTarget = (i, w, h) => {
-      const locations = [
-        { x: w * 0.2, y: h * 0.2 }, // Top-Left
-        { x: w * 0.5, y: h * 0.2 }, // Top-Center
-        { x: w * 0.8, y: h * 0.2 }, // Top-Right
-        { x: w * 0.2, y: h * 0.5 }, // Left-Center
-        { x: w * 0.5, y: h * 0.5 }, // Center
-        { x: w * 0.8, y: h * 0.5 }, // Right-Center
-        { x: w * 0.2, y: h * 0.8 }, // Bottom-Left
-        { x: w * 0.5, y: h * 0.8 }, // Bottom-Center
-        { x: w * 0.8, y: h * 0.8 }, // Bottom-Right
-      ];
-      return locations[i % 9];
-    };
-
-    const simulation = d3
-      .forceSimulation(nodes)
-
-      // 🔥 Smooth motion control
-      .alphaDecay(0.015)          // slower cooling = smoother animation
-      .velocityDecay(0.45)        // more inertia, less jitter
-
-      // 🔗 Links feel elastic, not stiff
-      .force(
-        'link',
-        d3.forceLink(links)
-          .id(d => d.id)
-          .distance(120)
-          .strength(0.08)
-      )
-
-      // 🫧 Gentle repulsion instead of explosive charge
-      .force(
-        'charge',
-        d3.forceManyBody()
-          .strength(-20) // Negative value for repulsion, but small to allow floating
-          .distanceMax(600)
-      )
-
-      // 🌊 Distribute nodes to 4 corners and center
-      .force('x', d3.forceX((_, i) => getTarget(i, window.innerWidth, window.innerHeight).x).strength(0.03))
-      .force('y', d3.forceY((_, i) => getTarget(i, window.innerWidth, window.innerHeight).y).strength(0.03))
-
-      // 🧱 Soft collision bubble
-      .force(
-        'collision',
-        d3.forceCollide()
-          .radius(72)
-          .strength(0.7)
-          .iterations(2)
-      )
-
-      .on('tick', () => {
-        updateLinks();
-        node.attr('transform', d => `translate(${d.x}, ${d.y})`);
-      });
-
-    simulationRef.current = simulation;
-    if (simulationChecked) {
-       simulation.alphaTarget(0.43324).restart();
-    } else {
-       simulation.alphaTarget(0);
-    }
-
-    const drag = d3.drag().on('start', dragStarted).on('drag', dragged).on('end', dragEnded);
-
-    function dragStarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    function dragEnded(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-    const newColor = linkColor;
-    const link = svg
-      .selectAll('.link')
-      .data(links)
-      .enter()
-      .append('path') // Use 'path' instead of 'line'
-      .attr('class', 'link')
-      .style('stroke', newColor) // Set random stroke color
-      .style('stroke-width', () => getRandomWidth()) // Set random stroke width
-      .style('filter', `${getBlurValues(selectedBlurValue).link} contrast(130%) brightness(220%) saturate(153%)`)
-      .style('opacity', () => getRandomOpacity()) // Set random opacity
-      .attr('marker-end', 'url(#arrowhead)') // Add an arrowhead marker to the end of the link
-      .attr('d', (d) => {
-        // Use curve commands to create curved lines
-        const dx = d.target.x - d.source.x;
-        const dy = d.target.y - d.source.y;
-        const dr = Math.sqrt(dx * dx + dy * dy); // Calculate the diagonal distance between source and target
-
-        // Use 'M' to move to the source point, 'A' to draw an elliptical arc, and 'L' to draw a line to the target point
-        const pathData = `
-      M ${d.source.x},${d.source.y}
-      A ${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}
-      L ${d.target.x},${d.target.y}
-    `;
-
-        return pathData;
-      });
-
-    const updateLinks = () => {
-      // Update the link selection
-
-      const updatedLink = svg
-        .selectAll('.link')
-        .data(links)
-        .enter()
-        .append('path')
-        .attr('class', 'link')
-        .style('stroke', newColor)
-        .style('stroke-width', () => getRandomWidth())
-        .style('filter', `${getBlurValues(selectedBlurValue).link} contrast(130%) brightness(220%) saturate(153%)`)
-        .style('opacity', 0.02) // Set random opacity
-        .attr('marker-end', 'url(#arrowhead)')
-        .merge(link); // Merge the new and existing links
-
-      updatedLink.attr('d', (d) => {
-        // Use curve commands to create curved lines
-        const dx = d.target.x - d.source.x;
-        const dy = d.target.y - d.source.y;
-        const dr = Math.sqrt(dx * dx + dy * dy); // Calculate the diagonal distance between source and target
-
-        // Use 'M' to move to the source point, 'A' to draw an elliptical arc, and 'L' to draw a line to the target point
-        const pathData = `
-        M ${d.source.x},${d.source.y}
-        A ${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}
-        L ${d.target.x},${d.target.y}
-      `;
-
-        return pathData;
-      });
-
-      // Remove any extra links
-      updatedLink.exit().remove();
-    };
-
-    // Update the angle labels
-
-    const xs = nodes.map((n) => n.x || 0);
+    const xs = scene.nodes.map((node) => node.x || 0);
     const minX = xs.length ? Math.min(...xs) : 0;
     const maxX = xs.length ? Math.max(...xs) : 1;
     const rangeX = maxX - minX || 1;
-    const { start, end } = getGradientPair(linkColor);
+    const { start, end } = getGradientPair(settings.linkColor);
     const gradientInterpolator = d3.interpolateHsl(start, end);
 
-    const node = svg
-      .selectAll('.node')
-      .data(nodes)
-      .call(drag)
-      .enter()
-      .append('circle')
-      .attr('width', 0)
-      .attr('height', 0)
-      .call(drag)
-      .attr('class', 'node')
-      .attr('data-order', (_, i) => i)
-      .style('opacity', () => getRandomOpacity())
-      .style('filter', `${getBlurValues(selectedBlurValue).node} contrast(130%) brightness(120%) saturate(153%)`)
-      .style('fill', (d: any) => {
-        if (activeButton === 'customColor') {
-          return getShadeOfColor(linkColor);
+    scene.nodes.forEach((node) => {
+      const style = scene.nodeStyles.get(node.id);
+      if (!style) {
+        return;
+      }
+
+      if (settings.activeButton === 'customColor') {
+        style.fill = getShadeOfColor(settings.customColor);
+        return;
+      }
+
+      if (settings.activeButton === 'gradient') {
+        const t = ((node.x || 0) - minX) / rangeX;
+        style.fill = gradientInterpolator(t);
+        return;
+      }
+
+      style.fill = settings.activeButton === 'randomColor' ? getRandomColor() : getRandomColor2();
+    });
+
+    scene.links.forEach((link) => {
+      const style = scene.linkStyles.get(link.id);
+      if (style) {
+        style.stroke = settings.linkColor;
+      }
+    });
+  };
+
+  const randomizeZIndex = () => {
+    const scene = sceneRef.current;
+    if (!scene) {
+      return;
+    }
+
+    scene.drawOrder = [...scene.drawOrder].sort(() => Math.random() - 0.5);
+    drawScene();
+  };
+
+  const applyDepthMode = (mode: string) => {
+    const scene = sceneRef.current;
+    if (!scene) {
+      return;
+    }
+
+    if (mode === 'random') {
+      randomizeZIndex();
+      return;
+    }
+
+    const orderedNodes = [...scene.nodes];
+    if (mode === 'original') {
+      orderedNodes.sort((leftNode, rightNode) => {
+        const leftStyle = scene.nodeStyles.get(leftNode.id);
+        const rightStyle = scene.nodeStyles.get(rightNode.id);
+        return (leftStyle?.order || 0) - (rightStyle?.order || 0);
+      });
+    } else if (mode === 'large-front') {
+      orderedNodes.sort((leftNode, rightNode) => {
+        const leftStyle = scene.nodeStyles.get(leftNode.id);
+        const rightStyle = scene.nodeStyles.get(rightNode.id);
+        return (leftStyle?.radius || 0) - (rightStyle?.radius || 0);
+      });
+    } else if (mode === 'small-front') {
+      orderedNodes.sort((leftNode, rightNode) => {
+        const leftStyle = scene.nodeStyles.get(leftNode.id);
+        const rightStyle = scene.nodeStyles.get(rightNode.id);
+        return (rightStyle?.radius || 0) - (leftStyle?.radius || 0);
+      });
+    }
+
+    scene.drawOrder = orderedNodes.map((node) => node.id);
+    drawScene();
+  };
+
+  const captureGraph = () => {
+    return new Promise((resolve, reject) => {
+      const canvas = canvasRef.current;
+      const scene = sceneRef.current;
+      if (!canvas) {
+        reject(new Error('Canvas element not found'));
+        return;
+      }
+      if (!scene) {
+        reject(new Error('Scene is not ready'));
+        return;
+      }
+
+      const exportCanvas = document.createElement('canvas');
+      const exportScale = 2;
+      exportCanvas.width = Math.max(1, Math.floor(scene.width * exportScale));
+      exportCanvas.height = Math.max(1, Math.floor(scene.height * exportScale));
+      const context = exportCanvas.getContext('2d');
+      if (!context) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      context.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+      const dataURL = exportCanvas.toDataURL('image/png');
+      resolve({
+        dataURL,
+        width: scene.width,
+        height: scene.height,
+      });
+    });
+  };
+
+  const buildSparseLinks = (nodes: MeshNode[]) => {
+    const links: MeshLink[] = [];
+    if (nodes.length < 2) {
+      return links;
+    }
+
+    const linkIds = new Set<string>();
+    const delaunay = d3.Delaunay.from(nodes, (node) => node.x, (node) => node.y);
+    const neighborLimit = nodes.length >= 18 ? 3 : 2;
+
+    const addLink = (sourceIndex: number, targetIndex: number) => {
+      if (sourceIndex === targetIndex) {
+        return;
+      }
+
+      const [leftIndex, rightIndex] = sourceIndex < targetIndex
+        ? [sourceIndex, targetIndex]
+        : [targetIndex, sourceIndex];
+      const linkId = `${nodes[leftIndex].id}:${nodes[rightIndex].id}`;
+      if (linkIds.has(linkId)) {
+        return;
+      }
+
+      linkIds.add(linkId);
+      links.push({
+        id: linkId,
+        source: nodes[leftIndex].id,
+        target: nodes[rightIndex].id,
+      });
+    };
+
+    nodes.forEach((_node, index) => {
+      addLink(index, (index + 1) % nodes.length);
+      const neighbors = (Array.from(delaunay.neighbors(index)) as number[])
+        .sort((leftIndex, rightIndex) => {
+          const leftNode = nodes[leftIndex];
+          const rightNode = nodes[rightIndex];
+          const centerNode = nodes[index];
+          const leftDistance = Math.hypot(centerNode.x - leftNode.x, centerNode.y - leftNode.y);
+          const rightDistance = Math.hypot(centerNode.x - rightNode.x, centerNode.y - rightNode.y);
+          return leftDistance - rightDistance;
+        })
+        .slice(0, neighborLimit);
+
+      neighbors.forEach((neighborIndex) => {
+        addLink(index, neighborIndex);
+      });
+    });
+
+    return links;
+  };
+
+  useEffect(() => {
+    settingsRef.current = {
+      linkColor,
+      customColor,
+      activeButton,
+      selectedBlurValue,
+      selectedSizeValue,
+      selectedDepthValue,
+    };
+  }, [linkColor, customColor, activeButton, selectedBlurValue, selectedSizeValue, selectedDepthValue]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const numNodes = parseInt(selectedValue, 10);
+    const nodes: MeshNode[] = Array.from({ length: numNodes }, (_, index) => ({
+      id: `node${index + 1}`,
+      x: Math.random() * width,
+      y: Math.random() * height,
+      label: `Node ${index + 1}`,
+    }));
+
+    const links = buildSparseLinks(nodes);
+
+    const nodeStyles = new Map<string, NodeStyle>(
+      nodes.map((node, index) => [
+        node.id,
+        {
+          id: node.id,
+          radius: getNodeRadius(selectedSizeValue),
+          opacity: getRandomOpacity(),
+          fill: linkColor,
+          order: index,
+        },
+      ])
+    );
+
+    const linkStyles = new Map<string, LinkStyle>(
+      links.map((link) => [
+        link.id,
+        {
+          id: link.id,
+          width: getRandomWidth(),
+          opacity: getRandomOpacity(),
+          stroke: linkColor,
+        },
+      ])
+    );
+
+    sceneRef.current = {
+      width,
+      height,
+      nodes,
+      links,
+      nodeStyles,
+      linkStyles,
+      drawOrder: nodes.map((node) => node.id),
+    };
+
+    syncNodeColors();
+    applyDepthMode(Array.from(selectedDepth)[0] || 'original');
+
+    const getTarget = (index: number, currentWidth: number, currentHeight: number) => {
+      const locations = [
+        { x: currentWidth * 0.2, y: currentHeight * 0.2 },
+        { x: currentWidth * 0.5, y: currentHeight * 0.2 },
+        { x: currentWidth * 0.8, y: currentHeight * 0.2 },
+        { x: currentWidth * 0.2, y: currentHeight * 0.5 },
+        { x: currentWidth * 0.5, y: currentHeight * 0.5 },
+        { x: currentWidth * 0.8, y: currentHeight * 0.5 },
+        { x: currentWidth * 0.2, y: currentHeight * 0.8 },
+        { x: currentWidth * 0.5, y: currentHeight * 0.8 },
+        { x: currentWidth * 0.8, y: currentHeight * 0.8 },
+      ];
+      return locations[index % 9];
+    };
+
+    if (simulationRef.current) {
+      simulationRef.current.stop();
+    }
+
+    const simulation = d3
+      .forceSimulation(nodes)
+      .alphaDecay(0.015)
+      .velocityDecay(0.45)
+      .force(
+        'link',
+        d3.forceLink<MeshNode, MeshLink>(links)
+          .id((node) => node.id)
+          .distance(170)
+          .strength(0.18)
+      )
+      .force(
+        'charge',
+        d3.forceManyBody<MeshNode>()
+          .strength(-28)
+          .distanceMax(600)
+      )
+      .force('x', d3.forceX<MeshNode>((_, index) => getTarget(index, width, height).x).strength(0.03))
+      .force('y', d3.forceY<MeshNode>((_, index) => getTarget(index, width, height).y).strength(0.03))
+      .force(
+        'collision',
+        d3.forceCollide<MeshNode>().radius((node) => (nodeStyles.get(node.id)?.radius || 72) * 0.62).strength(0.7).iterations(2)
+      )
+      .on('tick', () => {
+        drawScene();
+      });
+
+    simulationRef.current = simulation;
+
+    const getPointerPosition = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
+    };
+
+    const findNodeAtPoint = (x: number, y: number) => {
+      const scene = sceneRef.current;
+      if (!scene) {
+        return null;
+      }
+
+      const nodeMap = new Map(scene.nodes.map((node) => [node.id, node]));
+      const hitOrder = [...scene.drawOrder].reverse();
+      for (const nodeId of hitOrder) {
+        const node = nodeMap.get(nodeId);
+        const style = scene.nodeStyles.get(nodeId);
+        if (!node || !style) {
+          continue;
         }
-        if (activeButton === 'gradient') {
-          const t = ((d.x || 0) - minX) / rangeX;
-          return gradientInterpolator(t);
+
+        if (Math.hypot(x - node.x, y - node.y) <= style.radius) {
+          return node;
         }
-        return (activeButton === 'randomColor' ? getRandomColor() : getRandomColor2());
-      })
-      .attr('r', () => getNodeRadius(selectedSizeValue));
+      }
+
+      return null;
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const pointer = getPointerPosition(event);
+      const node = findNodeAtPoint(pointer.x, pointer.y);
+      if (!node) {
+        return;
+      }
+
+      dragStateRef.current = { nodeId: node.id, pointerId: event.pointerId };
+      node.fx = pointer.x;
+      node.fy = pointer.y;
+      canvas.setPointerCapture(event.pointerId);
+      simulation.alphaTarget(0.3).restart();
+      setSimulationChecked(false);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const { nodeId, pointerId } = dragStateRef.current;
+      if (!nodeId || pointerId !== event.pointerId) {
+        return;
+      }
+
+      const scene = sceneRef.current;
+      if (!scene) {
+        return;
+      }
+
+      const node = scene.nodes.find((entry) => entry.id === nodeId);
+      if (!node) {
+        return;
+      }
+
+      const pointer = getPointerPosition(event);
+      node.fx = pointer.x;
+      node.fy = pointer.y;
+      drawScene();
+    };
+
+    const releasePointer = (event: PointerEvent) => {
+      const { nodeId, pointerId } = dragStateRef.current;
+      if (!nodeId || pointerId !== event.pointerId) {
+        return;
+      }
+
+      const scene = sceneRef.current;
+      const node = scene?.nodes.find((entry) => entry.id === nodeId);
+      if (node) {
+        node.fx = null;
+        node.fy = null;
+      }
+
+      dragStateRef.current = { nodeId: null, pointerId: null };
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+      simulation.alphaTarget(0);
+    };
+
+    canvas.style.cursor = 'all-scroll';
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', releasePointer);
+    canvas.addEventListener('pointerleave', releasePointer);
+
+    if (simulationChecked) {
+      simulation.alphaTarget(0.43324).restart();
+    } else {
+      simulation.alphaTarget(0);
+    }
+
+    drawScene();
 
     return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerup', releasePointer);
+      canvas.removeEventListener('pointerleave', releasePointer);
       simulation.stop();
-      d3.select(svgRef.current).selectAll('*').remove();
     };
   }, [selectedValue, regenerationTrigger]);
 
   useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    
-    // Update links color
-    svg.selectAll('.link')
-      .style('stroke', linkColor);
-
-    // Update nodes color
-    const nodesSelection = svg.selectAll('.node');
-    const xs: number[] = [];
-    nodesSelection.each((d: any) => {
-      xs.push(d.x || 0);
-    });
-    const minX = xs.length ? Math.min(...xs) : 0;
-    const maxX = xs.length ? Math.max(...xs) : 1;
-    const rangeX = maxX - minX || 1;
-    const { start, end } = getGradientPair(linkColor);
-    const gradientInterpolator = d3.interpolateHsl(start, end);
-    nodesSelection
-      .style('fill', (d: any) => {
-        if (activeButton === 'customColor') {
-          return getShadeOfColor(customColor);
-        }
-        if (activeButton === 'gradient') {
-          const t = ((d.x || 0) - minX) / rangeX;
-          return gradientInterpolator(t);
-        }
-        return (activeButton === 'randomColor' ? getRandomColor() : getRandomColor2());
-      });
+    settingsRef.current = {
+      ...settingsRef.current,
+      linkColor,
+      activeButton,
+      customColor,
+    };
+    syncNodeColors();
+    drawScene();
   }, [linkColor, activeButton, customColor]);
 
   useEffect(() => {
-    // No simulation restart logic for blur changes as it doesn't affect physics
-  }, [simulationChecked]);
-
-  useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    
-    const blurValues = getBlurValues(selectedBlurValue);
-    
-    // Update links blur
-    svg.selectAll('.link')
-      .style('filter', `${blurValues.link} contrast(130%) brightness(220%) saturate(153%)`);
-
-    // Update nodes blur
-    svg.selectAll('.node')
-      .style('filter', `${blurValues.node} contrast(130%) brightness(120%) saturate(153%)`);
-      
+    settingsRef.current = {
+      ...settingsRef.current,
+      selectedBlurValue,
+    };
+    drawScene();
   }, [selectedBlurValue]);
 
   useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    
-    // Smoothly transition node sizes
-    svg.selectAll('.node')
-      .transition()
-      .duration(750)
-      .ease(d3.easeCubicOut)
-      .attr('r', () => getNodeRadius(selectedSizeValue));
-      
-    // Update simulation collision force to reflect new sizes
+    settingsRef.current = {
+      ...settingsRef.current,
+      selectedSizeValue,
+    };
+
+    const scene = sceneRef.current;
+    if (!scene) {
+      return;
+    }
+
+    scene.nodes.forEach((node) => {
+      const style = scene.nodeStyles.get(node.id);
+      if (style) {
+        style.radius = getNodeRadius(selectedSizeValue);
+      }
+    });
+
     if (simulationRef.current) {
       simulationRef.current.force(
         'collision',
-        d3.forceCollide()
-          .radius(72) // We might want to adjust this based on size too, but keeping it simple for now or dynamic
-          .strength(0.7)
-          .iterations(2)
+        d3.forceCollide<MeshNode>().radius((node) => (scene.nodeStyles.get(node.id)?.radius || 72) * 0.62).strength(0.7).iterations(2)
       );
       simulationRef.current.alpha(0.3).restart();
     }
-  }, [selectedSizeValue]);
+
+    applyDepthMode(Array.from(selectedDepth)[0] || 'original');
+  }, [selectedSizeValue, selectedDepth]);
 
   const handleDropdownChange = (keys: Set<string>) => {
-    setSelected(keys);
+    const keysSet = keys instanceof Set ? keys : new Set(Array.isArray(keys) ? keys : []);
+    setSelected(keysSet);
     recolorLinks(true);
   };
 
   const handleSizeChange = (keys: Set<string>) => {
-    setSelectedSize(keys);
-    // Removed recolorLinks(true) to avoid triggering regeneration
+    const keysSet = keys instanceof Set ? keys : new Set(Array.isArray(keys) ? keys : []);
+    setSelectedSize(keysSet);
   };
 
   const handleBlurChange = (keys: Set<string>) => {
-    setSelectedBlur(keys);
+    const keysSet = keys instanceof Set ? keys : new Set(Array.isArray(keys) ? keys : []);
+    setSelectedBlur(keysSet);
   };
 
   const handleDepthChange = (keys: Set<string>) => {
-    setSelectedDepth(keys);
-    const mode = Array.from(keys)[0];
+    const keysSet = keys instanceof Set ? keys : new Set(Array.isArray(keys) ? keys : []);
+    setSelectedDepth(keysSet);
+    const mode = Array.from(keysSet)[0];
     if (mode) {
+      settingsRef.current = {
+        ...settingsRef.current,
+        selectedDepthValue: String(mode),
+      };
       applyDepthMode(String(mode));
     }
   };
@@ -843,7 +1067,7 @@ function App() {
                     color="secondary"
                     selectionMode="single"
                     selectedKeys={selectedSize}
-                    onSelectionChange={handleSizeChange}
+                      onSelectionChange={handleSizeChange as any}
                   >
                     <Dropdown.Item key="Small">Small</Dropdown.Item>
                     <Dropdown.Item key="Medium">Medium</Dropdown.Item>
@@ -852,22 +1076,6 @@ function App() {
                     <Dropdown.Item key="Huge">Huge</Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
-              </Tooltip>
-            </div>
-          </Grid>
-          <Grid>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 10, color: '#64748b' }}>Colour mode</span>
-              <Tooltip
-                enterDelay={444}
-                color="invert"
-                shadow
-                placement="bottom"
-                content={'One colour with different shades.'}
-              >
-                <Button id="recolor" bordered auto color="secondary" onPress={() => recolorLinks(true)} size="xs">
-                  Single Hue
-                </Button>{' '}
               </Tooltip>
             </div>
           </Grid>
@@ -890,55 +1098,103 @@ function App() {
           <Grid>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 10, color: '#64748b' }}>Colour</span>
-              <Tooltip
-                enterDelay={444}
-                color="invert"
-                shadow
-                placement="bottom"
-                content={'Pick a custom color'}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 6px',
+                  borderRadius: 999,
+                  border: '1px solid rgba(148, 163, 184, 0.28)',
+                  background: 'rgba(255,255,255,0.9)',
+                  boxShadow: '0 1px 4px rgba(15, 23, 42, 0.06)',
+                }}
               >
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    background: customColor,
-                    border: '2px solid #ffffff',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                    cursor: 'pointer',
-                    transform: 'translateZ(0)',
-                    transition: 'transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
+                <Tooltip
+                  enterDelay={444}
+                  color="invert"
+                  shadow
+                  placement="bottom"
+                  content={'Switch between random, single-hue, gradient and custom colour modes.'}
                 >
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    value={customColor}
-                    onChange={handleCustomColorChange}
+                  <Dropdown>
+                    <Dropdown.Button light color="secondary" size="xs" css={{ tt: 'capitalize', minWidth: '112px' }}>
+                      {colorModeLabel}
+                    </Dropdown.Button>
+                    <Dropdown.Menu
+                      variant="shadow"
+                      aria-label="Choose the colour mode"
+                      color="secondary"
+                      selectionMode="single"
+                      selectedKeys={new Set([activeButton])}
+                      onSelectionChange={handleColorModeChange as any}
+                    >
+                      <Dropdown.Item key="randomColor">Random</Dropdown.Item>
+                      <Dropdown.Item key="randomColor2">Single Hue</Dropdown.Item>
+                      <Dropdown.Item key="gradient">Gradient</Dropdown.Item>
+                      <Dropdown.Item key="customColor">Custom</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </Tooltip>
+
+                <Tooltip
+                  enterDelay={444}
+                  color="invert"
+                  shadow
+                  placement="bottom"
+                  content={activeButton === 'customColor' ? 'Custom colour is active.' : 'Pick a custom colour and switch to Custom mode.'}
+                >
+                  <div
                     style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      opacity: 0,
+                      position: 'relative',
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: customColor,
+                      border: activeButton === 'customColor' ? '2px solid #4338ca' : '2px solid #ffffff',
+                      boxShadow: activeButton === 'customColor'
+                        ? '0 0 0 3px rgba(67, 56, 202, 0.16), 0 2px 8px rgba(0,0,0,0.12)'
+                        : '0 2px 8px rgba(0,0,0,0.12)',
                       cursor: 'pointer',
-                      padding: 0,
-                      margin: 0,
+                      transform: 'translateZ(0)',
+                      transition: 'transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
-                  />
-                </div>
-              </Tooltip>
+                    onClick={() => {
+                      setActiveButton('customColor');
+                      setLinkColor(customColor);
+                      setSimulationChecked(false);
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    <input
+                      ref={colorInputRef}
+                      type="color"
+                      value={customColor}
+                      onChange={handleCustomColorChange}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer',
+                        padding: 0,
+                        margin: 0,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+              </div>
             </div>
           </Grid>
           <Card css={{ mw: '10px', align: 'center', pt: '3px', opacity: '0.3', bs: 'none', bg: 'transparent' }}>
@@ -973,7 +1229,7 @@ function App() {
                     color="secondary"
                     selectionMode="single"
                     selectedKeys={selectedDepth}
-                    onSelectionChange={handleDepthChange}
+                      onSelectionChange={handleDepthChange as any}
                   >
                     <Dropdown.Item key="original">Original</Dropdown.Item>
                     <Dropdown.Item key="large-front">Big front</Dropdown.Item>
@@ -1005,7 +1261,7 @@ function App() {
                     color="secondary"
                     selectionMode="single"
                     selectedKeys={selected}
-                    onSelectionChange={handleDropdownChange}
+                      onSelectionChange={handleDropdownChange as any}
                   >
                     <Dropdown.Item key="6" icon={<CopyDocumentIcon2 size={18} fill="var(--nextui-colors-secondary)" />}>
                       6
@@ -1061,7 +1317,7 @@ function App() {
                     color="secondary"
                     selectionMode="single"
                     selectedKeys={selectedBlur}
-                    onSelectionChange={handleBlurChange}
+                      onSelectionChange={handleBlurChange as any}
                   >
                     <Dropdown.Item key="Low">Low</Dropdown.Item>
                     <Dropdown.Item key="Medium">Medium</Dropdown.Item>
@@ -1074,7 +1330,7 @@ function App() {
           </Grid>
         </Grid.Container>
 
-        <div id="scaled-element" ref={svgRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}></div>
+        <canvas id="scaled-element" ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} />
 
         {contextMenuPosition && (
           <Card
