@@ -1,6 +1,6 @@
 import { getAllPaddingData } from './utils/autolayout';
 import { sendNumberVariablesToUI } from './utils/variables';
-import { createPaddingVariables, handleUpdatePadding, handleUpdateItemSpacing, handleApplyRandomPaddings, handleBulkApplyDepthSpacing } from './handlers/paddingHandlers';
+import { createPaddingVariables, handleUpdatePadding, handleUpdateItemSpacing, handleApplyEvenPaddings, handleBulkApplyDepthSpacing, handleSnapAutoLayoutToGrid } from './handlers/paddingHandlers';
 import { handleArrangeFrames, handleGroupSelectedFrames, handlePairSelectedFrames, handleFindDuplicateTopLevelFrames } from './handlers/frameHandlers';
 import { handleSelectAllAutoLayout, handleSelectNextAutoLayout, handleZoomToNode, handleRenameNode } from './handlers/selectionHandlers';
 import { handleConvertColorsToVariables, handleCreateColorCollectionFromSelection, handleCreateAllColorVariables, handleAliasLocalToImportedByName } from './handlers/colorHandlers';
@@ -114,6 +114,7 @@ async function findOrphanedInstancesOnPage(): Promise<{ checked: number; total: 
 
 // Update padding data on selection change
 figma.on('selectionchange', () => {
+  figma.ui.postMessage({ type: 'selection-changed' });
   figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
   const frames = figma.currentPage.selection.filter((n) => n.type === 'FRAME') as FrameNode[];
   figma.ui.postMessage({ type: 'selection-frames', count: frames.length, hasFrames: frames.length > 0 });
@@ -200,8 +201,13 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
-  if (msg.type === 'apply-random-paddings') {
-    handleApplyRandomPaddings(msg);
+  if (msg.type === 'apply-even-paddings') {
+    handleApplyEvenPaddings(msg);
+    return;
+  }
+
+  if (msg.type === 'snap-auto-layout-to-grid') {
+    handleSnapAutoLayoutToGrid();
     return;
   }
 

@@ -6,6 +6,7 @@ type UsePluginMessagesParams = {
   setNumberVariables: (data: NumberVariable[]) => void;
   setHasFramesSelected: (has: boolean) => void;
   setHasDuplicateSelection: (has: boolean) => void;
+  setSelectionChangeToken?: (value: number | ((current: number) => number)) => void;
   setTextRecomputeRunning?: (running: boolean) => void;
   setTextRecomputeTotal?: (n: number) => void;
   setTextRecomputeDone?: (n: number) => void;
@@ -20,6 +21,7 @@ export const usePluginMessages = ({
   setNumberVariables,
   setHasFramesSelected,
   setHasDuplicateSelection,
+  setSelectionChangeToken,
   setTextRecomputeRunning,
   setTextRecomputeTotal,
   setTextRecomputeDone,
@@ -43,6 +45,9 @@ export const usePluginMessages = ({
         const has = Boolean(pluginMessage.hasFrames);
         setHasFramesSelected(has);
         if (!has) setHasDuplicateSelection(false);
+      }
+      if (pluginMessage.type === 'selection-changed') {
+        setSelectionChangeToken && setSelectionChangeToken((current) => current + 1);
       }
       if (pluginMessage.type === 'duplicate-selection') {
         setHasDuplicateSelection(Number(pluginMessage.count) > 0);
@@ -80,5 +85,5 @@ export const usePluginMessages = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [setPaddingData, setNumberVariables, setHasFramesSelected, setHasDuplicateSelection, setTextRecomputeRunning, setTextRecomputeTotal, setTextRecomputeDone, setOrphanScanRunning, setOrphanScanTotal, setOrphanScanChecked, setOrphanScanFound]);
+  }, [setPaddingData, setNumberVariables, setHasFramesSelected, setHasDuplicateSelection, setSelectionChangeToken, setTextRecomputeRunning, setTextRecomputeTotal, setTextRecomputeDone, setOrphanScanRunning, setOrphanScanTotal, setOrphanScanChecked, setOrphanScanFound]);
 };

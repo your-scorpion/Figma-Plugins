@@ -20,8 +20,12 @@ export const sendFindDuplicateFrames = (): void => {
   sendPluginMessage({ type: 'find-duplicate-top-level-frames' });
 };
 
-export const sendApplyRandomPaddings = (randomnessLevel: number): void => {
-  sendPluginMessage({ type: 'apply-random-paddings', randomnessLevel });
+export const sendApplyEvenPaddings = (paddingIncrement: number): void => {
+  sendPluginMessage({ type: 'apply-even-paddings', paddingIncrement });
+};
+
+export const sendSnapAutoLayoutToGrid = (): void => {
+  sendPluginMessage({ type: 'snap-auto-layout-to-grid' });
 };
 
 export const sendConvertColorsToVariables = (): void => {

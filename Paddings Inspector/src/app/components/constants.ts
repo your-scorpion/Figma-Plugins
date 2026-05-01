@@ -1,5 +1,7 @@
 export const DEFAULT_PREFIX = 'padding';
 export const DEFAULT_RANDOMNESS_LEVEL = 50;
+export const DEFAULT_PADDING_INCREMENT = 0;
+export const MAX_PADDING_INCREMENT = 48;
 export const SCROLL_DELAY_MS = 150;
 export const API_TIMEOUT_MS = 10000;
 

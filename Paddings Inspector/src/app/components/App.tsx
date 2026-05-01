@@ -43,6 +43,7 @@ function App() {
     setNumberVariables: state.setNumberVariables,
     setHasFramesSelected: state.setHasFramesSelected,
     setHasDuplicateSelection: state.setHasDuplicateSelection,
+    setSelectionChangeToken: state.setSelectionChangeToken,
     setTextRecomputeRunning: state.setTextRecomputeRunning,
     setTextRecomputeTotal: state.setTextRecomputeTotal,
     setTextRecomputeDone: state.setTextRecomputeDone,
@@ -200,9 +201,10 @@ function App() {
         isVisible={state.toolbarsVisible}
         activeTab={state.activeTab}
         paddingDataLength={state.paddingData.length}
-        randomnessLevel={state.randomnessLevel}
+        paddingIncrement={state.paddingIncrement}
+        selectionChangeToken={state.selectionChangeToken}
         fixPaddingsLoading={state.fixPaddingsLoading}
-        onRandomnessChange={state.setRandomnessLevel}
+        onPaddingIncrementChange={state.setPaddingIncrement}
       />
 
       {/* Modals */}

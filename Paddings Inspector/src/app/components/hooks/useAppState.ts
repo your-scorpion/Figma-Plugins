@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { PaddingNode, NumberVariable, TabType } from '../types';
-import { DEFAULT_PREFIX, DEFAULT_RANDOMNESS_LEVEL, getPaddingRangeMax } from '../constants';
+import { DEFAULT_PADDING_INCREMENT, DEFAULT_PREFIX, DEFAULT_RANDOMNESS_LEVEL } from '../constants';
 
 export const useAppState = () => {
   const [paddingData, setPaddingData] = useState<PaddingNode[]>([]);
@@ -15,6 +15,8 @@ export const useAppState = () => {
   const [fixPaddingsLoading, setFixPaddingsLoading] = useState(false);
   const [createVariablesLoading, setCreateVariablesLoading] = useState(false);
   const [randomnessLevel, setRandomnessLevel] = useState(DEFAULT_RANDOMNESS_LEVEL);
+  const [paddingIncrement, setPaddingIncrement] = useState(DEFAULT_PADDING_INCREMENT);
+  const [selectionChangeToken, setSelectionChangeToken] = useState(0);
   const [toolbarsVisible, setToolbarsVisible] = useState(true);
   const [arrangeNamingOpen, setArrangeNamingOpen] = useState(false);
   const [postfixInput, setPostfixInput] = useState('');
@@ -35,8 +37,6 @@ export const useAppState = () => {
   const [nodeOperationsOpen, setNodeOperationsOpen] = useState(false);
   const [componentSearchOpen, setComponentSearchOpen] = useState(false);
   const [selectionValidatorOpen, setSelectionValidatorOpen] = useState(false);
-
-  const paddingRangeMax = useMemo(() => getPaddingRangeMax(randomnessLevel), [randomnessLevel]);
 
   return {
     // Data
@@ -86,6 +86,10 @@ export const useAppState = () => {
     // Settings
     randomnessLevel,
     setRandomnessLevel,
+    paddingIncrement,
+    setPaddingIncrement,
+    selectionChangeToken,
+    setSelectionChangeToken,
     toolbarsVisible,
     setToolbarsVisible,
     // Modals
@@ -111,7 +115,5 @@ export const useAppState = () => {
     // Tabs
     activeTab,
     setActiveTab,
-    // Computed
-    paddingRangeMax,
   };
 };

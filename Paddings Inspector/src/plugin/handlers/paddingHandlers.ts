@@ -237,13 +237,128 @@ export function handleUpdateItemSpacing(msg: any) {
   }
 }
 
-// Apply random paddings
-export function handleApplyRandomPaddings(msg: any) {
+// Apply a uniform padding increase to selected Auto Layout nodes
+export function handleApplyEvenPaddings(msg: any) {
+  try {
+    const selectedRoots = figma.currentPage.selection.filter(
+      (node): node is FrameNode | ComponentNode | InstanceNode =>
+        (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') &&
+        isAutoLayoutNode(node) &&
+        node.visible &&
+        !node.locked
+    );
+
+    if (selectedRoots.length === 0) {
+      figma.notify('Select at least one Auto Layout node.');
+      return;
+    }
+
+    const paddingIncrement = typeof msg.paddingIncrement === 'number'
+      ? Math.max(0, Math.round(msg.paddingIncrement))
+      : 0;
+
+    type PaddingBaseline = {
+      paddingTop: number;
+      paddingBottom: number;
+      paddingLeft: number;
+      paddingRight: number;
+    };
+
+    type PaddingPreviewSession = {
+      selectionKey: string;
+      baselineByNodeId: Record<string, PaddingBaseline>;
+    };
+
+    const previewStore = figma.root.getPluginData('paddingPreviewSession');
+    let previewSession: PaddingPreviewSession | null = null;
+
+    if (previewStore) {
+      try {
+        previewSession = JSON.parse(previewStore) as PaddingPreviewSession;
+      } catch {
+        previewSession = null;
+      }
+    }
+
+    const collectAutoLayoutTree = (node: SceneNode, nodes: Array<FrameNode | ComponentNode | InstanceNode>) => {
+      if (
+        (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') &&
+        isAutoLayoutNode(node) &&
+        node.visible &&
+        !node.locked
+      ) {
+        nodes.push(node);
+      }
+
+      if ('children' in node && Array.isArray((node as any).children)) {
+        for (const child of (node as any).children as ReadonlyArray<SceneNode>) {
+          collectAutoLayoutTree(child, nodes);
+        }
+      }
+    };
+
+    const selectedNodes: Array<FrameNode | ComponentNode | InstanceNode> = [];
+    for (const root of selectedRoots) {
+      collectAutoLayoutTree(root, selectedNodes);
+    }
+
+    const selectionKey = selectedNodes.map((node: FrameNode | ComponentNode | InstanceNode) => node.id).sort().join(',');
+
+    if (!previewSession || previewSession.selectionKey !== selectionKey) {
+      previewSession = {
+        selectionKey,
+        baselineByNodeId: selectedNodes.reduce<Record<string, PaddingBaseline>>((acc: Record<string, PaddingBaseline>, node: FrameNode | ComponentNode | InstanceNode) => {
+          acc[node.id] = {
+            paddingTop: node.paddingTop,
+            paddingBottom: node.paddingBottom,
+            paddingLeft: node.paddingLeft,
+            paddingRight: node.paddingRight,
+          };
+          return acc;
+        }, {}),
+      };
+    }
+
+    const applyIncrementToNode = (node: FrameNode | ComponentNode | InstanceNode) => {
+      const baseline = previewSession?.baselineByNodeId[node.id];
+      if (!baseline) return;
+
+      try {
+        (node as any).paddingTop = Math.max(0, baseline.paddingTop + paddingIncrement);
+      } catch {}
+      try {
+        (node as any).paddingBottom = Math.max(0, baseline.paddingBottom + paddingIncrement);
+      } catch {}
+      try {
+        (node as any).paddingLeft = Math.max(0, baseline.paddingLeft + paddingIncrement);
+      } catch {}
+      try {
+        (node as any).paddingRight = Math.max(0, baseline.paddingRight + paddingIncrement);
+      } catch {}
+    };
+
+    for (const node of selectedNodes) {
+      applyIncrementToNode(node);
+    }
+
+    if (paddingIncrement === 0) {
+      figma.root.setPluginData('paddingPreviewSession', '');
+    } else {
+      figma.root.setPluginData('paddingPreviewSession', JSON.stringify(previewSession));
+    }
+
+    figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
+  } catch (e) {
+    console.error('Error applying even paddings:', e);
+    figma.notify('Error applying even paddings.');
+  }
+}
+
+export function handleSnapAutoLayoutToGrid() {
   try {
     const selected = figma.currentPage.selection.filter(
       (node): node is FrameNode | ComponentNode | InstanceNode =>
         (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') &&
-        isAutoLayoutNode(node) &&
         node.visible &&
         !node.locked
     );
@@ -253,68 +368,39 @@ export function handleApplyRandomPaddings(msg: any) {
       return;
     }
 
-    const randomnessLevel = msg.randomnessLevel || 50;
-
-    const getPaddingScale = (level: number) => {
-      if (level <= 20) return [0, 4, 8];
-      if (level <= 40) return [0, 4, 8, 12, 16];
-      if (level <= 60) return [0, 4, 8, 12, 16, 20, 24];
-      if (level <= 80) return [0, 4, 8, 12, 16, 20, 24, 28, 32];
-      return [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48];
+    const snapToTwoPixelGrid = (value: number) => {
+      if (!Number.isFinite(value) || value <= 0) return 0;
+      return Math.ceil(value / 2) * 2;
     };
 
-    const getSpacingScale = (level: number) => {
-      if (level <= 20) return [0, 4, 8];
-      if (level <= 40) return [0, 4, 8, 12];
-      if (level <= 60) return [0, 4, 8, 12, 16, 20];
-      if (level <= 80) return [0, 4, 8, 12, 16, 20, 24];
-      return [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40];
-    };
-
-    const paddingScale = getPaddingScale(randomnessLevel);
-    const spacingScale = getSpacingScale(randomnessLevel);
-
-    const randFrom = (arr: number[]) => arr[Math.floor(Math.random() * arr.length)];
-
-    const applyRandomToNode = (node: FrameNode | ComponentNode | InstanceNode) => {
-      if (!isAutoLayoutNode(node)) return;
-      const padV = randFrom(paddingScale);
-      const padH = randFrom(paddingScale);
-      const maxPad = paddingScale[paddingScale.length - 1];
-      const vPad = Math.min(padV, maxPad);
-      const hPad = Math.min(padH, maxPad);
-      const gap = randFrom(spacingScale);
-
+    const applyGridToNode = (node: FrameNode | ComponentNode | InstanceNode) => {
       try {
-        (node as any).paddingTop = vPad;
+        (node as any).paddingTop = snapToTwoPixelGrid(node.paddingTop);
       } catch {}
       try {
-        (node as any).paddingBottom = vPad;
+        (node as any).paddingBottom = snapToTwoPixelGrid(node.paddingBottom);
       } catch {}
       try {
-        (node as any).paddingLeft = hPad;
+        (node as any).paddingLeft = snapToTwoPixelGrid(node.paddingLeft);
       } catch {}
       try {
-        (node as any).paddingRight = hPad;
+        (node as any).paddingRight = snapToTwoPixelGrid(node.paddingRight);
       } catch {}
       try {
-        (node as any).primaryAxisSpacing = gap;
-      } catch {}
-      try {
-        (node as any).counterAxisSpacing = gap;
-      } catch {}
-      try {
-        (node as any).itemSpacing = gap;
+        (node as any).itemSpacing = snapToTwoPixelGrid(node.itemSpacing ?? 0);
       } catch {}
     };
 
     const walk = (node: SceneNode) => {
       if (
         (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') &&
-        isAutoLayoutNode(node)
+        isAutoLayoutNode(node) &&
+        node.visible &&
+        !node.locked
       ) {
-        applyRandomToNode(node);
+        applyGridToNode(node);
       }
+
       if ('children' in node && Array.isArray((node as any).children)) {
         for (const child of (node as any).children as ReadonlyArray<SceneNode>) {
           walk(child);
@@ -322,15 +408,17 @@ export function handleApplyRandomPaddings(msg: any) {
       }
     };
 
-    for (const n of selected) walk(n);
+    for (const node of selected) {
+      walk(node);
+    }
 
     figma.ui.postMessage({ type: 'padding-data', data: getAllPaddingData() });
     figma.notify(
-      `Assigned random paddings (${randomnessLevel}% randomness) to ${selected.length} selection roots (and their descendants).`
+      `Snapped selected Auto Layout paddings and spacing to the 2px grid for ${selected.length} selection root${selected.length === 1 ? '' : 's'}.`
     );
   } catch (e) {
-    console.error('Error applying random paddings:', e);
-    figma.notify('Error applying random paddings.');
+    console.error('Error snapping Auto Layout values to grid:', e);
+    figma.notify('Error snapping Auto Layout values to the 2px grid.');
   }
 }
 

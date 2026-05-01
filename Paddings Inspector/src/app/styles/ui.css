@@ -87,6 +87,94 @@ button:focus {
   -webkit-backdrop-filter: blur(6px);
 }
 
+.toolbar-tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.toolbar-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  width: 220px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  background:
+    linear-gradient(180deg, rgba(36,39,48,.98), rgba(19,21,28,.98));
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.36),
+    0 0 20px rgba(90,200,250,.12),
+    inset 0 1px 0 rgba(255,255,255,.16);
+  color: rgba(255,255,255,.94);
+  transform: translateX(-50%) translateY(8px) scale(.96);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity .22s ease,
+    transform .26s cubic-bezier(.2,.8,.2,1),
+    filter .26s ease;
+  filter: blur(8px);
+  z-index: 10020;
+  backdrop-filter: blur(18px) saturate(155%);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+}
+
+.toolbar-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) translateY(-5px) rotate(45deg);
+  border-right: 1px solid rgba(255,255,255,.14);
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  background: rgba(22,24,31,.98);
+}
+
+.toolbar-tooltip-anchor:hover .toolbar-tooltip,
+.toolbar-tooltip-anchor:focus-within .toolbar-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.toolbar-tooltip--wide {
+  width: 260px;
+}
+
+.toolbar-tooltip--align-left {
+  left: 0;
+  transform: translateX(0) translateY(8px) scale(.96);
+}
+
+.toolbar-tooltip--align-left::after {
+  left: 22px;
+  transform: translateY(-5px) rotate(45deg);
+}
+
+.toolbar-tooltip-anchor:hover .toolbar-tooltip--align-left,
+.toolbar-tooltip-anchor:focus-within .toolbar-tooltip--align-left {
+  transform: translateX(0) translateY(0) scale(1);
+}
+
+.toolbar-tooltip__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.98);
+  margin-bottom: 5px;
+}
+
+.toolbar-tooltip__body {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(232,236,245,.86);
+}
+
 #create:focus {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
 }

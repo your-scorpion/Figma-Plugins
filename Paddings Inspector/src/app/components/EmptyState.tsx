@@ -21,6 +21,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onArrangeNamingOpen,
 }) => {
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [hoveredButton, setHoveredButton] = React.useState<'find-duplicates' | 'arrange-naming' | null>(null);
   const tooltipTimerRef = React.useRef<number | null>(null);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -353,6 +354,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               ) : (
                 <button
                   onClick={() => sendFindDuplicateFrames()}
+                  onMouseEnter={() => !fixPaddingsLoading && setHoveredButton('find-duplicates')}
+                  onMouseLeave={() => setHoveredButton((current) => (current === 'find-duplicates' ? null : current))}
                   disabled={fixPaddingsLoading}
                   style={{
                     padding: '12px 20px',
@@ -362,6 +365,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                     letterSpacing: '0.02em',
                     background: fixPaddingsLoading
                       ? 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
+                      : hoveredButton === 'find-duplicates'
+                        ? 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%)'
                       : 'linear-gradient(145deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
                     color: fixPaddingsLoading ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.95)',
                     border: fixPaddingsLoading
@@ -370,10 +375,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                     borderRadius: '12px',
                     boxShadow: fixPaddingsLoading
                       ? 'inset 0 0 2px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.25)'
+                      : hoveredButton === 'find-duplicates'
+                        ? 'inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(0,0,0,.45), 0 0 14px rgba(255,255,255,.18)'
                       : '0 8px 18px rgba(0,0,0,0.35), inset 0 0.5px 1px rgba(255,255,255,0.25)',
                     cursor: fixPaddingsLoading ? 'default' : 'pointer',
                     transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.3s ease',
                     opacity: fixPaddingsLoading ? 0.7 : 1,
+                    transform: hoveredButton === 'find-duplicates' ? 'translateY(-1px)' : 'translateY(0)',
+                    filter: hoveredButton === 'find-duplicates' ? 'brightness(1.06)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -392,6 +401,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
               <button
                 onClick={onArrangeNamingOpen}
+                onMouseEnter={() => hasFramesSelected && setHoveredButton('arrange-naming')}
+                onMouseLeave={() => setHoveredButton((current) => (current === 'arrange-naming' ? null : current))}
                 disabled={!hasFramesSelected}
                 title={hasFramesSelected ? undefined : 'please select frames'}
                 style={{
@@ -402,6 +413,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                   letterSpacing: '0.02em',
                   background: !hasFramesSelected
                     ? 'linear-gradient(180deg, rgba(1, 0, 0, 0.06) 0%, rgba(255,255,255,0.02) 100%)'
+                    : hoveredButton === 'arrange-naming'
+                      ? 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%)'
                     : 'linear-gradient(145deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
                   color: !hasFramesSelected ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.95)',
                   border: !hasFramesSelected
@@ -410,10 +423,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                   borderRadius: '12px',
                   boxShadow: !hasFramesSelected
                     ? 'inset 0 0 2px rgba(255,255,255,0.1), inset 0 -1px 3px rgba(0,0,0,0.25)'
+                    : hoveredButton === 'arrange-naming'
+                      ? 'inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(0,0,0,.45), 0 0 14px rgba(255,255,255,.18)'
                     : '0 8px 18px rgba(0,0,0,0.35), inset 0 0.5px 1px rgba(255,255,255,0.25)',
                   cursor: !hasFramesSelected ? 'default' : 'pointer',
                   transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease, box-shadow 0.3s ease',
                   opacity: !hasFramesSelected ? 0.7 : 1,
+                  transform: hoveredButton === 'arrange-naming' ? 'translateY(-1px)' : 'translateY(0)',
+                  filter: hoveredButton === 'arrange-naming' ? 'brightness(1.06)' : 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
