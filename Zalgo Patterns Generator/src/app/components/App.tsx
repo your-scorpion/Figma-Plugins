@@ -36,8 +36,6 @@ import Tooltip from '@mui/material/Tooltip';
 // @ts-ignore
 import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
 // @ts-ignore
-import TextRotateUpIcon from '@mui/icons-material/TextRotateUp';
-// @ts-ignore
 import TextRotationDownIcon from '@mui/icons-material/TextRotationDown';
 // @ts-ignore
 import Backdrop from '@mui/material/Backdrop';
@@ -45,6 +43,9 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 // @ts-ignore
 import Zoom from '@mui/material/Zoom';
+// @ts-ignore
+import ShuffleIcon from '@mui/icons-material/Shuffle';
+import { MapViewToggle } from './new/MapViewToggle';
 
 
 declare function require(path: string): any;
@@ -69,6 +70,7 @@ const App = ({ }) => {
   const [message, setMessage] = useState('');
   const handleChange = event => {
     setMessage(event.target.value);
+    setTemplateText(event.target.value);
   };
   const textbox = React.useRef<HTMLInputElement>(undefined);
   const countRef = React.useCallback((element: HTMLInputElement) => {
@@ -77,6 +79,13 @@ const App = ({ }) => {
   }, []);
 
   const [code, setCode] = useState('');
+  const [templateText, setTemplateText] = useState('');
+  const templateInitialized = React.useRef(false);
+
+  const shuffleTemplateText = () => {
+    const tokens = templateText.split(' ').filter(t => t.length > 0);
+    setTemplateText(shuffleArray(tokens).join(' '));
+  };
 
   function withEvent(func: Function): React.ChangeEventHandler<any> {
     return (event: React.ChangeEvent<any>) => {
@@ -186,6 +195,10 @@ const App = ({ }) => {
 
   //I apologize for the unconventional variable naming in the code.  let dtaa = GistPage();
   let dtaa = GistPage();
+  if (!templateInitialized.current && dtaa && String(dtaa).length > 0) {
+    templateInitialized.current = true;
+    setTemplateText(String(dtaa));
+  }
   let dtaa2 = GistPage();
   let dtaa3 = GistPage();
   let dtaa4 = amount22;
@@ -198,7 +211,7 @@ const App = ({ }) => {
     const count = parseInt(textbox.current.value, 10);
     //send data to controller.ts
     setOpen(true);
-    parent.postMessage({ pluginMessage: { type: 'create-rectangles', count, dtaa, dtaa2, dtaa3, dtaa4, dtaa5, dtaa6, dtaa7 } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'create-rectangles', count, dtaa: templateText, dtaa2, dtaa3, dtaa4, dtaa5, dtaa6, dtaa7 } }, '*');
   };
 
   const onCancel = () => {
@@ -390,14 +403,25 @@ const App = ({ }) => {
               followCursor={true}
               arrow
             >
-
-              <div className="header">Text template</div>
+              <div className="header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Text template
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<ShuffleIcon fontSize="small" />}
+                  onClick={shuffleTemplateText}
+                  style={{ minWidth: 0, padding: '2px 8px', fontSize: '11px' }}
+                >
+                  Shuffle
+                </Button>
+              </div>
             </Tooltip>
             <TextareaAutosize className="textarea"
               maxRows={12}
               aria-label="Text example"
-              onChange={handleChange} //take data to textfield
-              value={dtaa}
+              onChange={handleChange}
+              value={templateText}
               style={{
                 width: 320
               }}
@@ -415,6 +439,8 @@ const App = ({ }) => {
                 onClick={onCreate}
                 href="#text-buttons">
                 Create</Button>
+
+              <MapViewToggle onStateChange={shuffleTemplateText} />
 
               <Button className="experiment_with"
                 color='info'
