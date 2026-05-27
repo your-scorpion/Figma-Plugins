@@ -1,0 +1,11 @@
+{
+  "name": "editable-3d-text-widget",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "nouislider": "^15.7.1"
+  }
+}

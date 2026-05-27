@@ -1,0 +1,11 @@
+{
+  "name": "3D Text",
+  "id": "com.your-scorpion.editable-3d-text-widget",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "containsWidget": true,
+  "widgetApi": "1.0.0",
+  "editorType": [
+    "figma"
+  ]
+}
