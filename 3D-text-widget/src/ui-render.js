@@ -1,4 +1,10 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './ui-config.js';
+import {
+  getFaceProjection,
+  getLayerOpacity,
+  getLayerOrigin,
+  getScene3D,
+} from './ui-3d.js';
 import { clamp, rgba, shade } from './ui-utils.js';
 
 function getTextOpacity(state) {
@@ -7,6 +13,17 @@ function getTextOpacity(state) {
 
 function getShadowOpacity(state) {
   return clamp((state.shadowOpacity ?? 78) / 100, 0, 1);
+}
+
+function makeShadow2State(state) {
+  return {
+    ...state,
+    shadowCount: state.shadow2Count ?? 10,
+    shadowDistance: state.shadow2Distance ?? 8,
+    shadowSoftness: state.shadow2Softness ?? 90,
+    shadowOpacity: state.shadow2Opacity ?? 35,
+    shadowColor: state.shadow2Color ?? '#000000',
+  };
 }
 
 function fitFontSize(ctx, lines, state) {
@@ -29,50 +46,16 @@ function fitFontSize(ctx, lines, state) {
   return fontSize;
 }
 
-function getDepthMetrics(state) {
-  const layerCount = clamp(Math.round(state.shadowCount ?? 12), 0, 24);
-  const depthStep = layerCount === 0
-    ? 0
-    : 0.9 + clamp(state.shadowDistance ?? 4, 0, 18) * 0.16;
-
-  return {
-    layerCount,
-    depthStep,
-  };
-}
-
-function getLayerOpacity(state, layer, layerCount) {
-  if (layerCount <= 0) {
-    return 0;
-  }
-
-  const maxOpacity = getShadowOpacity(state);
-  const minOpacity = maxOpacity * 0.18;
-  const ratio = layerCount === 1 ? 1 : (layer - 1) / (layerCount - 1);
-
-  return clamp(minOpacity + ratio * (maxOpacity - minOpacity), 0, 1);
-}
-
-function getShadowTrailMetrics(state, rotateX = 0, rotateY = 0) {
-  const distance = clamp(state.shadowDistance ?? 4, 0, 18);
-  const baseX = Math.sin(rotateY) * 0.9;
-  const baseY = 0.34 - Math.sin(rotateX) * 0.72;
-
-  return {
-    stepX: baseX * distance,
-    stepY: baseY * distance,
-  };
-}
-
-function getShadowMetrics(state, fontSize, rotateX = 0, rotateY = 0, depthStep = 0, layerCount = 0) {
+function getShadowMetrics(state, fontSize, scene) {
   const softness = clamp(state.shadowSoftness ?? 58, 0, 100);
   const softnessRatio = softness / 100;
   const sharpnessRatio = 1 - softnessRatio;
-  const { stepX, stepY } = getShadowTrailMetrics(state, rotateX, rotateY);
+  const { stepX, stepY } = scene;
+  const { x: rotateX, y: rotateY } = scene.rotation;
   const shadowCount = clamp(Math.round(state.shadowCount ?? 12), 0, 24);
   const shadowOpacity = getShadowOpacity(state);
   const depthRatio = clamp((state.shadowDepth ?? 100) / 100, 0, 2);
-  const depthProjection = depthStep * layerCount * 0.55 * depthRatio;
+  const depthProjection = scene.depthStep * scene.layerCount * 0.55 * depthRatio;
   const depthX = Math.sin(rotateY) * depthProjection;
   const depthY = (0.5 - Math.sin(rotateX) * 0.6) * depthProjection;
   const shadowX = stepX * Math.max(1, Math.min(shadowCount, 4)) + depthX;
@@ -102,20 +85,24 @@ function getShadowMetrics(state, fontSize, rotateX = 0, rotateY = 0, depthStep =
 
 export function renderCssPreview(state, surface, object) {
   const lines = state.text.split(/\r?\n/);
-  const { layerCount, depthStep } = getDepthMetrics(state);
-  const previewFontSize = Math.round(clamp(state.size * 0.62, 48, 170));
-  const rotateX = (state.rotateX * Math.PI) / 180;
-  const rotateY = (state.rotateY * Math.PI) / 180;
-  const { stepX, stepY } = getShadowTrailMetrics(state, rotateX, rotateY);
-  const shadow = getShadowMetrics(state, previewFontSize, rotateX, rotateY, depthStep, layerCount);
+  const scene = getScene3D(state);
+  const previewFontSize = Math.round(Math.max(48, state.size * 0.62));
+  const shadow = getShadowMetrics(state, previewFontSize, scene);
+  const state2 = makeShadow2State(state);
+  const scene2 = getScene3D(state2);
+  const shadow2 = getShadowMetrics(state2, previewFontSize, scene2);
   const textOpacity = getTextOpacity(state);
 
   surface.style.background = 'transparent';
+  surface.style.perspective = `${scene.perspective}px`;
   object.innerHTML = '';
   object.style.fontFamily = state.font;
   object.style.fontSize = `${previewFontSize}px`;
   object.style.transform = `translate(-50%, -50%) rotateX(${state.rotateX}deg) rotateY(${state.rotateY}deg) rotateZ(${state.rotateZ}deg)`;
-  object.style.filter = `drop-shadow(${shadow.x.toFixed(1)}px ${shadow.y.toFixed(1)}px ${shadow.blur.toFixed(1)}px ${shadow.color})`;
+  object.style.filter = [
+    `drop-shadow(${shadow2.x.toFixed(1)}px ${shadow2.y.toFixed(1)}px ${shadow2.blur.toFixed(1)}px ${shadow2.color})`,
+    `drop-shadow(${shadow.x.toFixed(1)}px ${shadow.y.toFixed(1)}px ${shadow.blur.toFixed(1)}px ${shadow.color})`,
+  ].join(' ');
 
   function createFace(color, x, y, z, opacity, isFront) {
     const face = document.createElement('div');
@@ -125,9 +112,11 @@ export function renderCssPreview(state, surface, object) {
     face.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, ${z}px)`;
 
     if (isFront) {
-      const strokeWidth = clamp(state.borderWidth ?? 0, 0, 24) * (previewFontSize / 180);
+      // Double width so only the outer half shows (inside is covered by text fill)
+      const strokeWidth = clamp(state.borderWidth ?? 0, 0, 24) * (previewFontSize / 180) * 2;
       face.style.webkitTextStrokeWidth = `${strokeWidth.toFixed(2)}px`;
       face.style.webkitTextStrokeColor = state.edgeColor;
+      face.style.paintOrder = 'stroke fill';
     }
 
     lines.forEach((line) => {
@@ -140,14 +129,31 @@ export function renderCssPreview(state, surface, object) {
     return face;
   }
 
-  for (let layer = layerCount; layer >= 1; layer -= 1) {
-    const shadeAmount = -Math.round((layer / layerCount) * 46);
+  // Shadow B layers (drawn first, underneath)
+  for (let layer = state2.shadowCount; layer >= 1; layer -= 1) {
+    const shadeAmount = -Math.round((layer / state2.shadowCount) * 46);
+    const origin2 = getLayerOrigin(layer, scene2.stepX, scene2.stepY, scene2.depthStep);
+    const face2 = createFace(
+      shade(state2.shadowColor ?? state2.edgeColor, shadeAmount),
+      origin2.x,
+      origin2.y,
+      origin2.z,
+      getLayerOpacity(state2, layer, state2.shadowCount),
+      false,
+    );
+    object.appendChild(face2);
+  }
+
+  // Shadow A layers (drawn on top of B)
+  for (let layer = scene.layerCount; layer >= 1; layer -= 1) {
+    const shadeAmount = -Math.round((layer / scene.layerCount) * 46);
+    const origin = getLayerOrigin(layer, scene.stepX, scene.stepY, scene.depthStep);
     const face = createFace(
       shade(state.shadowColor ?? state.edgeColor, shadeAmount),
-      stepX * layer,
-      stepY * layer,
-      -layer * depthStep,
-      getLayerOpacity(state, layer, layerCount),
+      origin.x,
+      origin.y,
+      origin.z,
+      getLayerOpacity(state, layer, scene.layerCount),
       false,
     );
     object.appendChild(face);
@@ -158,79 +164,117 @@ export function renderCssPreview(state, surface, object) {
 
 export function drawScene(state, ctx) {
   const lines = state.text.split(/\r?\n/);
-  const rotateX = (state.rotateX * Math.PI) / 180;
-  const rotateY = (state.rotateY * Math.PI) / 180;
-  const rotateZ = (state.rotateZ * Math.PI) / 180;
+  const scene = getScene3D(state);
+  const state2 = makeShadow2State(state);
+  const scene2 = getScene3D(state2);
 
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   const fontSize = fitFontSize(ctx, lines, state);
   const lineHeight = fontSize * 0.92;
-  const { layerCount, depthStep } = getDepthMetrics(state);
-  const { stepX, stepY } = getShadowTrailMetrics(state, rotateX, rotateY);
-  const scaleX = Math.max(0.05, Math.cos(rotateY));
-  const scaleY = Math.max(0.05, Math.cos(rotateX));
-  const frontOffsetX = 0;
-  const frontOffsetY = 0;
-  const shadow = getShadowMetrics(state, fontSize, rotateX, rotateY, depthStep, layerCount);
+  const shadow = getShadowMetrics(state, fontSize, scene);
   const textOpacity = getTextOpacity(state);
   const strokeWidth = clamp(state.borderWidth ?? 0, 0, 24);
+  const centerLineOffset = (lines.length - 1) / 2;
+
+  function drawFace(origin, drawStyle) {
+    const projection = getFaceProjection(origin, scene.rotation, scene.perspective);
+
+    ctx.save();
+    ctx.transform(
+      projection.basisX.x,
+      projection.basisX.y,
+      projection.basisY.x,
+      projection.basisY.y,
+      projection.origin.x,
+      projection.origin.y,
+    );
+
+    if (drawStyle.shadow) {
+      ctx.shadowColor = drawStyle.shadow.color;
+      ctx.shadowBlur = drawStyle.shadow.blur / projection.averageScale;
+      ctx.shadowOffsetX = drawStyle.shadow.x / projection.averageScale;
+      ctx.shadowOffsetY = drawStyle.shadow.y / projection.averageScale;
+    } else {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+
+    if (drawStyle.strokeWidth > 0) {
+      // Double lineWidth so the inner half is hidden by the fill pass (outside stroke)
+      ctx.lineWidth = drawStyle.strokeWidth * 2;
+      ctx.strokeStyle = drawStyle.strokeColor;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+
+      lines.forEach((line, index) => {
+        const y = (index - centerLineOffset) * lineHeight;
+        ctx.strokeText(line || ' ', 0, y);
+      });
+    }
+
+    ctx.fillStyle = drawStyle.fill;
+    lines.forEach((line, index) => {
+      const y = (index - centerLineOffset) * lineHeight;
+      ctx.fillText(line || ' ', 0, y);
+    });
+
+    ctx.restore();
+  }
 
   ctx.save();
   ctx.translate(CANVAS_WIDTH * 0.5, CANVAS_HEIGHT * 0.5);
-  ctx.rotate(rotateZ);
-  ctx.scale(scaleX, scaleY);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = `700 ${fontSize}px ${state.font}`;
 
-  // Correct orthographic projection of each depth layer at z3d = -layer * depthStep.
-  // In pre-scale drawing coordinates (which ctx.scale(cos θY, cos θX) will project):
-  //   x_draw = layer * (stepX - depthStep * tan(θY))
-  //   y_draw = layer * (stepY + tan(θX) * (stepX * sin(θY) + depthStep * cos(θY)))
-  const tanY = Math.tan(rotateY);
-  const tanX = Math.tan(rotateX);
+  // Shadow B layers (drawn first, underneath)
+  for (let layer = scene2.layerCount; layer >= 1; layer -= 1) {
+    const layerColor2 = shade(
+      state2.shadowColor ?? state2.edgeColor,
+      -Math.round((layer / scene2.layerCount) * 46),
+    );
 
-  for (let layer = layerCount; layer >= 1; layer -= 1) {
-    const layerColor = shade(state.shadowColor ?? state.edgeColor, -Math.round((layer / layerCount) * 46));
-    ctx.fillStyle = rgba(layerColor, getLayerOpacity(state, layer, layerCount));
-
-    const layerX = layer * (stepX - depthStep * tanY);
-    const layerYBase = layer * (stepY + tanX * (stepX * Math.sin(rotateY) + depthStep * Math.cos(rotateY)));
-
-    lines.forEach((line, index) => {
-      const y = (index - (lines.length - 1) / 2) * lineHeight + layerYBase;
-      ctx.fillText(line || ' ', layerX, y);
-    });
+    drawFace(
+      getLayerOrigin(layer, scene2.stepX, scene2.stepY, scene2.depthStep),
+      {
+        fill: rgba(layerColor2, getLayerOpacity(state2, layer, scene2.layerCount)),
+        strokeWidth: 0,
+      },
+    );
   }
 
-  ctx.fillStyle = rgba(state.textColor, textOpacity);
-  ctx.shadowColor = shadow.color;
-  ctx.shadowBlur = shadow.blur;
-  ctx.shadowOffsetX = shadow.x;
-  ctx.shadowOffsetY = shadow.y;
+  // Shadow A layers (drawn on top of B)
+  for (let layer = scene.layerCount; layer >= 1; layer -= 1) {
+    const layerColor = shade(
+      state.shadowColor ?? state.edgeColor,
+      -Math.round((layer / scene.layerCount) * 46),
+    );
 
-  if (strokeWidth > 0) {
-    ctx.lineWidth = strokeWidth;
-    ctx.strokeStyle = state.edgeColor;
-    ctx.lineJoin = 'round';
-    ctx.miterLimit = 2;
-
-    lines.forEach((line, index) => {
-      const y = (index - (lines.length - 1) / 2) * lineHeight + frontOffsetY;
-      const x = frontOffsetX;
-      ctx.strokeText(line || ' ', x, y);
-    });
+    drawFace(
+      getLayerOrigin(layer, scene.stepX, scene.stepY, scene.depthStep),
+      {
+        fill: rgba(layerColor, getLayerOpacity(state, layer, scene.layerCount)),
+        strokeWidth: 0,
+      },
+    );
   }
 
-  lines.forEach((line, index) => {
-    const y = (index - (lines.length - 1) / 2) * lineHeight + frontOffsetY;
-    const x = frontOffsetX;
-    ctx.fillText(line || ' ', x, y);
-  });
+  drawFace(
+    { x: 0, y: 0, z: 0 },
+    {
+      fill: rgba(state.textColor, textOpacity),
+      strokeWidth,
+      strokeColor: state.edgeColor,
+      shadow,
+    },
+  );
 
   ctx.restore();
   ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
 }
