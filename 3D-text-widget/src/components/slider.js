@@ -15,6 +15,7 @@ export function createSlider(container, options = {}) {
   let display       = cs(start);
   let target        = display;
   let dragging      = false;
+  let activePointerId = null;
   let isInternalSet = false;
   let raf           = null;
 
@@ -54,7 +55,7 @@ export function createSlider(container, options = {}) {
 
   const capStyle = `
     width:3px; height:10px; border-radius:3px; flex-shrink:0;
-    background:var(--ns,#08091a);
+    background:var(--ns,#364e8b);
     box-shadow:2px 2px 5px var(--ns-dk,#04050f),-1px -1px 3px var(--ns-lt,#0f1228);
     transition:box-shadow 0.3s ease;
   `;
@@ -74,7 +75,7 @@ export function createSlider(container, options = {}) {
 
   const track = el('div', `
     position:relative; flex:1; height:10px; border-radius:999px;
-    background:var(--ns,#08091a);
+    background:var(--ns,#364e8b);
     box-shadow:inset 3px 3px 7px var(--ns-dk,#04050f),inset -2px -2px 5px var(--ns-lt,#0f1228);
     cursor:pointer; margin:0 6px;
     --glow:${glow};
@@ -145,7 +146,7 @@ export function createSlider(container, options = {}) {
   // Thumb
   const thumb = el('div', `
     position:absolute; top:50%; width:20px; height:20px; border-radius:50%;
-    background:var(--ns,#08091a);
+    background:var(--ns,#364e8b);
     box-shadow:3px 3px 8px var(--ns-dk,#04050f),-2px -2px 7px var(--ns-lt,#0f1228);
     transform:translate(-50%,-50%) scale(1);
     transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1),
@@ -254,20 +255,31 @@ export function createSlider(container, options = {}) {
     if (!isInternalSet) onChange(Math.round(v));
   }
 
+  function endDrag() {
+    if (!dragging) {
+      return;
+    }
+
+    setActive(false);
+    hideTip();
+    activePointerId = null;
+  }
+
   // ── Events ─────────────────────────────────────────────────────────────
   track.addEventListener('pointerdown', e => {
     if (e.target === native) return;
     e.preventDefault();
-    track.setPointerCapture(e.pointerId);
+    activePointerId = e.pointerId;
     setActive(true); showTip();
     const v = fromClientX(e.clientX); springTo(v); emit(v);
   });
   track.addEventListener('pointermove', e => {
-    if (!dragging) return;
+    if (!dragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
     const v = fromClientX(e.clientX); springTo(v); emit(v);
   });
-  track.addEventListener('pointerup',     () => { setActive(false); hideTip(); });
-  track.addEventListener('pointercancel', () => { setActive(false); hideTip(); });
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+  track.addEventListener('pointerleave', endDrag);
   thumb.addEventListener('mouseenter', showTip);
   thumb.addEventListener('mouseleave', hideTip);
   native.addEventListener('input', () => {
@@ -290,6 +302,10 @@ export function createSlider(container, options = {}) {
     }
   });
 
+  window.addEventListener('blur', endDrag);
+  document.addEventListener('pointerup', endDrag, true);
+  document.addEventListener('pointercancel', endDrag, true);
+
   render();
 
   return {
@@ -306,6 +322,9 @@ export function createSlider(container, options = {}) {
     },
     destroy() {
       cancelAnimationFrame(raf);
+      window.removeEventListener('blur', endDrag);
+      document.removeEventListener('pointerup', endDrag, true);
+      document.removeEventListener('pointercancel', endDrag, true);
       container.innerHTML = '';
     },
   };

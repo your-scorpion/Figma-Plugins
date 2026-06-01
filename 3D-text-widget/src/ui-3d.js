@@ -11,7 +11,7 @@ export function getRotationRadians(state) {
 }
 
 export function getDepthMetrics(state) {
-  const layerCount = clamp(Math.round(state.shadowCount ?? 12), 0, 24);
+  const layerCount = clamp(Math.round(state.shadowCount ?? 12), 0, 48);
   const depthStep = layerCount === 0
     ? 0
     : 0.9 + clamp(state.shadowDistance ?? 4, 0, 18) * 0.16;
@@ -30,14 +30,16 @@ export function getLayerOpacity(state, layer, layerCount) {
   const maxOpacity = clamp((state.shadowOpacity ?? 78) / 100, 0, 1);
   const ratio = layerCount === 1 ? 1 : (layer - 1) / (layerCount - 1);
 
-  // Exponential: closest layer (ratio=0) → maxOpacity, farthest (ratio=1) → ~0
-  return clamp(Math.pow(1 - ratio, 2.2) * maxOpacity, 0, 1);
+  // Exponential: lower exponent keeps farther layers more visible for denser stacks.
+  return clamp(Math.pow(1 - ratio, 1.45) * maxOpacity, 0, 1);
 }
 
 export function getShadowTrailMetrics(state, rotation) {
   const distance = clamp(state.shadowDistance ?? 4, 0, 18);
-  const directionX = clamp(state.shadowDirectionX ?? 0, -100, 100) / 100;
-  const directionY = clamp(state.shadowDirectionY ?? 0, -100, 100) / 100;
+  // UI sliders expose direction in the -200..200 range.
+  // Normalize with the same range so the full control affects the preview.
+  const directionX = clamp(state.shadowDirectionX ?? 0, -200, 200) / 200;
+  const directionY = clamp(state.shadowDirectionY ?? 0, -200, 200) / 200;
   const baseX = Math.sin(rotation.y) * 0.9 + directionX * 1.1;
   const baseY = 0.34 - Math.sin(rotation.x) * 0.72 + directionY * 1.1;
 

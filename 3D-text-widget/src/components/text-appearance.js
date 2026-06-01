@@ -4,57 +4,65 @@ import { clamp } from '../ui-utils.js';
 
 export function createTextAppearanceSection() {
   return `
-    <div class="editor-field">
-      <label for="text-input">Text</label>
-      <textarea id="text-input" spellcheck="false"></textarea>
-    </div>
-
-    <div class="editor-field editor-field--font additional-effects">
-      <label for="font-input">Font</label>
-      <select id="font-input"></select>
-    </div>
-
-    <div class="editor-field additional-effects">
-      <div class="editor-range-meta">
-        <label for="size-value-input">Size</label>
+    <div class="editor-block">
+      <div class="editor-block__head">
+        <h2>Text</h2>
+        <p>Content and style</p>
       </div>
-      <div class="editor-size-row">
-        <input
-          id="size-value-input"
-          class="editor-size-row__input"
-          type="number"
-          min="72"
-          step="2"
-          inputmode="numeric"
-        />
-        <select id="size-preset-input" class="editor-size-row__select" aria-label="Size presets">
-          <option value="72">72 px</option>
-          <option value="96">96 px</option>
-          <option value="120">120 px</option>
-          <option value="144">144 px</option>
-          <option value="180">180 px</option>
-          <option value="220">220 px</option>
-          <option value="260">260 px</option>
-          <option value="custom">Custom</option>
-        </select>
-      </div>
-    </div>
 
-    <div class="editor-range-row additional-effects">
-      <div class="editor-swatch">
-        <div class="editor-swatch__head">
-          <label for="text-color-input">Text color</label>
-          <output id="text-color-output" class="editor-swatch__value"></output>
+      <div class="editor-block__body">
+        <div class="editor-subgroup">
+          <div class="editor-subgroup__title">Content</div>
+
+          <div class="editor-field">
+            <label for="text-input">Text</label>
+            <textarea id="text-input" spellcheck="false"></textarea>
+          </div>
+
+          <div class="editor-range-row editor-range-row--font-size additional-effects">
+            <div class="editor-field editor-field--font">
+              <label for="font-input">Font</label>
+              <select id="font-input"></select>
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="size-value-input">Size</label>
+                <output id="size-output"></output>
+              </div>
+              <input
+                id="size-value-input"
+                class="editor-size-row__input"
+                type="number"
+                min="72"
+                step="2"
+                inputmode="numeric"
+              />
+            </div>
+          </div>
         </div>
-        <input id="text-color-input" type="color" />
-      </div>
 
-      <div class="editor-field">
-        <div class="editor-range-meta">
-          <label for="text-opacity-input">Text opacity</label>
-          <output id="text-opacity-output"></output>
+        <div class="editor-subgroup">
+          <div class="editor-subgroup__title">Color and opacity</div>
+
+          <div class="editor-range-row additional-effects">
+            <div class="editor-swatch">
+              <div class="editor-swatch__head">
+                <label for="text-color-input">Text color</label>
+                <output id="text-color-output" class="editor-swatch__value"></output>
+              </div>
+              <input id="text-color-input" type="color" />
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="text-opacity-input">Text opacity</label>
+                <output id="text-opacity-output"></output>
+              </div>
+              <div id="text-opacity-input" class="noui-slider"></div>
+            </div>
+          </div>
         </div>
-        <div id="text-opacity-input" class="noui-slider"></div>
       </div>
     </div>
   `;
@@ -64,14 +72,11 @@ export function bindTextAppearance(state, onChange) {
   const textInput = document.getElementById('text-input');
   const fontInput = document.getElementById('font-input');
   const sizeValueInput = document.getElementById('size-value-input');
-  const sizePresetInput = document.getElementById('size-preset-input');
   const sizeOutput = document.getElementById('size-output');
   const textColorInput = document.getElementById('text-color-input');
   const textColorOutput = document.getElementById('text-color-output');
   const textOpacityInput = document.getElementById('text-opacity-input');
   const textOpacityOutput = document.getElementById('text-opacity-output');
-
-  const sizePresets = new Set(['72', '96', '120', '144', '180', '220', '260']);
 
   const textOpacitySlider = createSlider(textOpacityInput, {
     start: state.textOpacity,
@@ -102,23 +107,7 @@ export function bindTextAppearance(state, onChange) {
   sizeValueInput.addEventListener('input', () => {
     const nextSize = Math.max(72, Number.parseInt(sizeValueInput.value || '0', 10));
     state.size = Number.isNaN(nextSize) ? state.size : nextSize;
-    sizePresetInput.value = sizePresets.has(`${state.size}`) ? `${state.size}` : 'custom';
-    onChange();
-  });
-
-  sizePresetInput.addEventListener('change', () => {
-    if (sizePresetInput.value === 'custom') {
-      sizeValueInput.focus();
-      sizeValueInput.select();
-      return;
-    }
-
-    const nextSize = Number.parseInt(sizePresetInput.value, 10);
-    if (Number.isNaN(nextSize)) {
-      return;
-    }
-
-    state.size = clamp(nextSize, 3, 655);
+    state.size = clamp(state.size, 3, 655);
     sizeValueInput.value = `${state.size}`;
     onChange();
   });
@@ -138,7 +127,6 @@ export function bindTextAppearance(state, onChange) {
       textInput.value = state.text;
       fontInput.value = state.font;
       sizeValueInput.value = `${state.size}`;
-      sizePresetInput.value = sizePresets.has(`${state.size}`) ? `${state.size}` : 'custom';
       sizeOutput.value = `${state.size}px`;
       textOpacitySlider.set(state.textOpacity);
       textOpacityOutput.value = `${state.textOpacity}%`;

@@ -84,6 +84,23 @@ body {
   gap: 24px;
 }
 
+.editor-subgroup {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--ui-radius);
+  background: rgba(7, 13, 30, 0.65);
+  border: 1px solid rgba(96, 165, 250, 0.14);
+}
+
+.editor-subgroup__title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(180, 210, 255, 0.72);
+}
+
 /* Form fields and sliders */
 .editor-field {
   display: grid;
@@ -214,10 +231,10 @@ body {
 }
 
 .editor-field--font select {
-  min-height: 26px;
-  padding: 3px 6px;
+  min-height: 42px;
+  padding: 4px 6px;
   border-radius: var(--ui-radius);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   letter-spacing: 0.01em;
 }
@@ -229,13 +246,18 @@ body {
   gap: 6px;
 }
 
-.editor-size-row__input,
-.editor-size-row__select {
+.editor-size-row__input {
   min-height: 30px;
   padding: 4px 6px;
   border-radius: var(--ui-radius);
   font-size: 12px;
   line-height: 1.2;
+}
+
+.editor-range-row--font-size {
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+  align-items: end;
 }
 
 .editor-size-row__input {
@@ -316,7 +338,13 @@ body {
   color: rgba(120, 165, 240, 0.55);
   letter-spacing: 0.04em;
 }
-.editor-block__body { padding: 0 16px 14px; position: relative; z-index: 1; }
+.editor-block__body {
+  display: grid;
+  gap: 14px;
+  padding: 0 16px 14px;
+  position: relative;
+  z-index: 1;
+}
 
 .editor-shadow-set-label {
   font-size: 10px;
@@ -340,7 +368,7 @@ body {
 .editor-shadow-set-divider {
   height: 1px;
   background: rgba(126, 198, 255, 0.12);
-  margin: 2px 0;
+  margin: 4px 0;
 }
 
 .additional-effects {
@@ -407,7 +435,7 @@ body {
 
 .editor-controller__layout {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 /* ── XY Pad ─────────────────────────────────────────────────────────── */
@@ -502,7 +530,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .editor-controller__readout {
@@ -542,8 +570,8 @@ body {
 /* ── Slider section ─────────────────────────────────────────────────── */
 .editor-controller__sliders {
   display: grid;
-  gap: 5px;
-  padding: 8px;
+  gap: 8px;
+  padding: 10px;
   border-radius: 9px;
   background: rgba(4, 6, 18, 0.55);
   border: 1px solid rgba(59, 130, 246, 0.14);
@@ -651,15 +679,15 @@ body {
 
 .editor-range-meta {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: rgba(208, 229, 255, 0.78);
 }
 
 .editor-range-meta output {
-  font-variant-numeric: tabular-nums;
-  color: #f8fbff;
+  display: none;
 }
 
 /* Action buttons */

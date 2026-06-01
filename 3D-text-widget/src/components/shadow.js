@@ -9,134 +9,133 @@ export function createShadowSection() {
         <p>Density and direction</p>
       </div>
 
-      <!-- ── Shadow A ──────────────────────────────────── -->
-      <div class="editor-shadow-set-label">Shadow A</div>
+      <div class="editor-block__body">
+        <!-- ── Shadow A ──────────────────────────────────── -->
+        <div class="editor-subgroup">
+          <div class="editor-shadow-set-label">Shadow A</div>
 
-      <div class="editor-color-row editor-color-row--single">
-        <div class="editor-swatch">
-          <div class="editor-swatch__head">
-            <label for="shadow-color-input">Color</label>
-            <output id="shadow-color-output" class="editor-swatch__value"></output>
+          <div class="editor-color-row editor-color-row--single">
+            <div class="editor-swatch">
+              <div class="editor-swatch__head">
+                <label for="shadow-color-input">Color</label>
+                <output id="shadow-color-output" class="editor-swatch__value"></output>
+              </div>
+              <input id="shadow-color-input" type="color" />
+            </div>
           </div>
-          <input id="shadow-color-input" type="color" />
-        </div>
-      </div>
 
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-count-input">Shadows</label>
-            <output id="shadow-count-output"></output>
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-count-input">Shadows</label>
+                <output id="shadow-count-output"></output>
+              </div>
+              <div id="shadow-count-input" class="noui-slider"></div>
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-distance-input">Distance</label>
+                <output id="shadow-distance-output"></output>
+              </div>
+              <div id="shadow-distance-input" class="noui-slider"></div>
+            </div>
           </div>
-          <div id="shadow-count-input" class="noui-slider"></div>
-        </div>
 
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-distance-input">Distance</label>
-            <output id="shadow-distance-output"></output>
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-softness-input">Softness</label>
+                <output id="shadow-softness-output"></output>
+              </div>
+              <div id="shadow-softness-input" class="noui-slider"></div>
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-opacity-input">Opacity</label>
+                <output id="shadow-opacity-output"></output>
+              </div>
+              <div id="shadow-opacity-input" class="noui-slider"></div>
+            </div>
           </div>
-          <div id="shadow-distance-input" class="noui-slider"></div>
-        </div>
-      </div>
-
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-softness-input">Softness</label>
-            <output id="shadow-softness-output"></output>
-          </div>
-          <div id="shadow-softness-input" class="noui-slider"></div>
-        </div>
-
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-opacity-input">Opacity</label>
-            <output id="shadow-opacity-output"></output>
-          </div>
-          <div id="shadow-opacity-input" class="noui-slider"></div>
-        </div>
-      </div>
-
-      <!-- ── Shadow B ──────────────────────────────────── -->
-      <div class="editor-shadow-set-divider"></div>
-      <div class="editor-shadow-set-label">Shadow B</div>
-
-      <div class="editor-color-row editor-color-row--single">
-        <div class="editor-swatch">
-          <div class="editor-swatch__head">
-            <label for="shadow2-color-input">Color</label>
-            <output id="shadow2-color-output" class="editor-swatch__value"></output>
-          </div>
-          <input id="shadow2-color-input" type="color" />
-        </div>
-      </div>
-
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow2-count-input">Shadows</label>
-            <output id="shadow2-count-output"></output>
-          </div>
-          <div id="shadow2-count-input" class="noui-slider"></div>
         </div>
 
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow2-distance-input">Distance</label>
-            <output id="shadow2-distance-output"></output>
-          </div>
-          <div id="shadow2-distance-input" class="noui-slider"></div>
-        </div>
-      </div>
+        <!-- ── Shadow B ──────────────────────────────────── -->
+        <div class="editor-shadow-set-divider"></div>
+        <div class="editor-subgroup">
+          <div class="editor-shadow-set-label">Shadow B</div>
 
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow2-softness-input">Softness</label>
-            <output id="shadow2-softness-output"></output>
+          <div class="editor-color-row editor-color-row--single">
+            <div class="editor-swatch">
+              <div class="editor-swatch__head">
+                <label for="shadow2-color-input">Color</label>
+                <output id="shadow2-color-output" class="editor-swatch__value"></output>
+              </div>
+              <input id="shadow2-color-input" type="color" />
+            </div>
           </div>
-          <div id="shadow2-softness-input" class="noui-slider"></div>
+
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow2-count-input">Shadows</label>
+                <output id="shadow2-count-output"></output>
+              </div>
+              <div id="shadow2-count-input" class="noui-slider"></div>
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow2-distance-input">Distance</label>
+                <output id="shadow2-distance-output"></output>
+              </div>
+              <div id="shadow2-distance-input" class="noui-slider"></div>
+            </div>
+          </div>
+
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow2-softness-input">Softness</label>
+                <output id="shadow2-softness-output"></output>
+              </div>
+              <div id="shadow2-softness-input" class="noui-slider"></div>
+            </div>
+
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow2-opacity-input">Opacity</label>
+                <output id="shadow2-opacity-output"></output>
+              </div>
+              <div id="shadow2-opacity-input" class="noui-slider"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow2-opacity-input">Opacity</label>
-            <output id="shadow2-opacity-output"></output>
-          </div>
-          <div id="shadow2-opacity-input" class="noui-slider"></div>
-        </div>
-      </div>
+        <!-- ── Shared: Direction ─────────────────────────── -->
+        <div class="editor-shadow-set-divider"></div>
+        <div class="editor-subgroup">
+          <div class="editor-subgroup__title">Direction</div>
 
-      <!-- ── Shared: Depth + Direction ─────────────────── -->
-      <div class="editor-shadow-set-divider"></div>
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-dir-x-input">Direction X</label>
+                <output id="shadow-dir-x-output"></output>
+              </div>
+              <div id="shadow-dir-x-input" class="noui-slider"></div>
+            </div>
 
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-depth-input">Depth</label>
-            <output id="shadow-depth-output"></output>
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="shadow-dir-y-input">Direction Y</label>
+                <output id="shadow-dir-y-output"></output>
+              </div>
+              <div id="shadow-dir-y-input" class="noui-slider"></div>
+            </div>
           </div>
-          <div id="shadow-depth-input" class="noui-slider"></div>
-        </div>
-      </div>
-
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-dir-x-input">Direction X</label>
-            <output id="shadow-dir-x-output"></output>
           </div>
-          <div id="shadow-dir-x-input" class="noui-slider"></div>
-        </div>
-
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="shadow-dir-y-input">Direction Y</label>
-            <output id="shadow-dir-y-output"></output>
-          </div>
-          <div id="shadow-dir-y-input" class="noui-slider"></div>
-        </div>
       </div>
     </div>
   `;
@@ -168,8 +167,6 @@ export function bindShadow(state, onChange) {
   const shadow2OpacityOutput = document.getElementById('shadow2-opacity-output');
 
   // ── Shared ────────────────────────────────────────────────────────────────
-  const shadowDepthInput = document.getElementById('shadow-depth-input');
-  const shadowDepthOutput = document.getElementById('shadow-depth-output');
   const shadowDirXInput = document.getElementById('shadow-dir-x-input');
   const shadowDirXOutput = document.getElementById('shadow-dir-x-output');
   const shadowDirYInput = document.getElementById('shadow-dir-y-input');
@@ -179,7 +176,7 @@ export function bindShadow(state, onChange) {
   const shadowCountSlider = createSlider(shadowCountInput, {
     start: state.shadowCount,
     min: 0,
-    max: 24,
+    max: 48,
     step: 1,
     onChange: (value) => {
       state.shadowCount = value;
@@ -228,7 +225,7 @@ export function bindShadow(state, onChange) {
   const shadow2CountSlider = createSlider(shadow2CountInput, {
     start: state.shadow2Count,
     min: 0,
-    max: 24,
+    max: 48,
     step: 1,
     onChange: (value) => {
       state.shadow2Count = value;
@@ -274,18 +271,6 @@ export function bindShadow(state, onChange) {
   });
 
   // ── Shared sliders ────────────────────────────────────────────────────────
-  const shadowDepthSlider = createSlider(shadowDepthInput, {
-    start: state.shadowDepth,
-    min: 0,
-    max: 200,
-    step: 1,
-    onChange: (value) => {
-      state.shadowDepth = value;
-      shadowDepthOutput.value = `${value}%`;
-      onChange();
-    },
-  });
-
   const shadowDirXSlider = createSlider(shadowDirXInput, {
     start: state.shadowDirectionX,
     min: -200,
@@ -345,8 +330,6 @@ export function bindShadow(state, onChange) {
       shadow2OpacityOutput.value = `${state.shadow2Opacity}%`;
 
       // Shared
-      shadowDepthSlider.set(state.shadowDepth);
-      shadowDepthOutput.value = `${state.shadowDepth}%`;
       shadowDirXSlider.set(state.shadowDirectionX);
       shadowDirXOutput.value = `${state.shadowDirectionX > 0 ? '+' : ''}${state.shadowDirectionX}%`;
       shadowDirYSlider.set(state.shadowDirectionY);

@@ -3,48 +3,57 @@ import { clamp, normalizeAxis } from '../ui-utils.js';
 
 export function createRotationSection() {
   return `
-    <div class="editor-field">
-      <div class="editor-range-meta">
-        <label for="rotation-pad">XY Controller</label>
-        <output id="xyz-output">X 0deg Y 0deg Z 0deg</output>
+    <div class="editor-block">
+      <div class="editor-block__head">
+        <h2>Rotation</h2>
+        <p>3D orientation</p>
       </div>
-      <div class="editor-controller">
-        <div class="editor-controller__layout">
-          <div
-            id="rotation-pad"
-            class="editor-controller__pad"
-            tabindex="0"
-            role="slider"
-            aria-label="Rotation X and Y controller"
-            aria-valuemin="-70"
-            aria-valuemax="70"
-          >
-            <div class="editor-controller__crosshair"></div>
-            <div class="editor-controller__pad-labels">
-              <span>Y</span>
-              <span>X</span>
-            </div>
-            <div id="rotation-pad-knob" class="editor-controller__knob"></div>
+
+      <div class="editor-block__body">
+        <div class="editor-subgroup">
+          <div class="editor-range-meta">
+            <label for="rotation-pad">XY Controller</label>
+            <output id="xyz-output">X 0deg Y 0deg Z 0deg</output>
           </div>
-          <div class="editor-controller__meta">
-            <span class="editor-controller__readout" id="rotation-pad-readout">X 0deg Y 0deg</span>
-            <button id="rotation-reset" class="editor-controller__reset" type="button">Reset XYZ</button>
-          </div>
-          <div class="editor-controller__sliders">
-            <div class="editor-controller__slider-row">
-              <label class="editor-controller__slider-label" for="rotate-z-input">Z</label>
-              <div class="editor-controller__slider-input" id="rotate-z-input"></div>
-              <output id="rotate-z-output" class="editor-controller__slider-output"></output>
-            </div>
-            <div class="editor-controller__slider-row">
-              <label class="editor-controller__slider-label" for="rotate-y-input">Y</label>
-              <div class="editor-controller__slider-input" id="rotate-y-input"></div>
-              <output id="rotate-y-output" class="editor-controller__slider-output"></output>
-            </div>
-            <div class="editor-controller__slider-row">
-              <label class="editor-controller__slider-label" for="rotate-x-input">X</label>
-              <div class="editor-controller__slider-input" id="rotate-x-input"></div>
-              <output id="rotate-x-output" class="editor-controller__slider-output"></output>
+          <div class="editor-controller">
+            <div class="editor-controller__layout">
+              <div
+                id="rotation-pad"
+                class="editor-controller__pad"
+                tabindex="0"
+                role="slider"
+                aria-label="Rotation X and Y controller"
+                aria-valuemin="-70"
+                aria-valuemax="70"
+              >
+                <div class="editor-controller__crosshair"></div>
+                <div class="editor-controller__pad-labels">
+                  <span>Y</span>
+                  <span>X</span>
+                </div>
+                <div id="rotation-pad-knob" class="editor-controller__knob"></div>
+              </div>
+              <div class="editor-controller__meta">
+                <span class="editor-controller__readout" id="rotation-pad-readout">X 0deg Y 0deg</span>
+                <button id="rotation-reset" class="editor-controller__reset" type="button">Reset XYZ</button>
+              </div>
+              <div class="editor-controller__sliders">
+                <div class="editor-controller__slider-row">
+                  <label class="editor-controller__slider-label" data-axis="z" for="rotate-z-input">Z</label>
+                  <div class="editor-controller__slider-input" id="rotate-z-input"></div>
+                  <output id="rotate-z-output" class="editor-controller__slider-output"></output>
+                </div>
+                <div class="editor-controller__slider-row">
+                  <label class="editor-controller__slider-label" data-axis="y" for="rotate-y-input">Y</label>
+                  <div class="editor-controller__slider-input" id="rotate-y-input"></div>
+                  <output id="rotate-y-output" class="editor-controller__slider-output"></output>
+                </div>
+                <div class="editor-controller__slider-row">
+                  <label class="editor-controller__slider-label" data-axis="x" for="rotate-x-input">X</label>
+                  <div class="editor-controller__slider-input" id="rotate-x-input"></div>
+                  <output id="rotate-x-output" class="editor-controller__slider-output"></output>
+                </div>
+              </div>
             </div>
           </div>
         </div>

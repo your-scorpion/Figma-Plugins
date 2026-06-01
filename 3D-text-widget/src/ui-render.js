@@ -7,6 +7,8 @@ import {
 } from './ui-3d.js';
 import { clamp, rgba, shade } from './ui-utils.js';
 
+const SHADOW_DEPTH_SCALE = 1.3;
+
 function getTextOpacity(state) {
   return clamp((state.textOpacity ?? 100) / 100, 0, 1);
 }
@@ -52,10 +54,9 @@ function getShadowMetrics(state, fontSize, scene) {
   const sharpnessRatio = 1 - softnessRatio;
   const { stepX, stepY } = scene;
   const { x: rotateX, y: rotateY } = scene.rotation;
-  const shadowCount = clamp(Math.round(state.shadowCount ?? 12), 0, 24);
+  const shadowCount = clamp(Math.round(state.shadowCount ?? 12), 0, 48);
   const shadowOpacity = getShadowOpacity(state);
-  const depthRatio = clamp((state.shadowDepth ?? 100) / 100, 0, 2);
-  const depthProjection = scene.depthStep * scene.layerCount * 0.55 * depthRatio;
+  const depthProjection = scene.depthStep * scene.layerCount * 0.55 * SHADOW_DEPTH_SCALE;
   const depthX = Math.sin(rotateY) * depthProjection;
   const depthY = (0.5 - Math.sin(rotateX) * 0.6) * depthProjection;
   const shadowX = stepX * Math.max(1, Math.min(shadowCount, 4)) + depthX;
@@ -70,7 +71,7 @@ function getShadowMetrics(state, fontSize, scene) {
       46,
     );
   const alpha = clamp(
-    (0.24 + sharpnessRatio * 0.28 + (shadowCount + (state.shadowDistance ?? 0)) / 160) * shadowOpacity,
+    (0.26 + sharpnessRatio * 0.32 + (shadowCount + (state.shadowDistance ?? 0)) / 120) * shadowOpacity,
     0,
     0.86,
   );

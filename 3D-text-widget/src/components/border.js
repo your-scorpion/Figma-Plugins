@@ -8,21 +8,25 @@ export function createBorderSection() {
         <p>Width and color</p>
       </div>
 
-      <div class="editor-range-row">
-        <div class="editor-field">
-          <div class="editor-range-meta">
-            <label for="border-width-input">Border width</label>
-            <output id="border-width-output"></output>
-          </div>
-          <div id="border-width-input" class="noui-slider"></div>
-        </div>
+      <div class="editor-block__body">
+        <div class="editor-subgroup">
+          <div class="editor-range-row">
+            <div class="editor-field">
+              <div class="editor-range-meta">
+                <label for="border-width-input">Border width</label>
+                <output id="border-width-output"></output>
+              </div>
+              <div id="border-width-input" class="noui-slider"></div>
+            </div>
 
-        <div class="editor-swatch">
-          <div class="editor-swatch__head">
-            <label for="border-color-input">Border color</label>
-            <output id="border-color-output" class="editor-swatch__value"></output>
+            <div class="editor-swatch">
+              <div class="editor-swatch__head">
+                <label for="border-color-input">Border color</label>
+                <output id="border-color-output" class="editor-swatch__value"></output>
+              </div>
+              <input id="border-color-input" type="color" />
+            </div>
           </div>
-          <input id="border-color-input" type="color" />
         </div>
       </div>
     </div>

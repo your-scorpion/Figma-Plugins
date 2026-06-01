@@ -16,11 +16,9 @@ export function createMarkup() {
 
           <div class="editor-group">
             ${createTextAppearanceSection()}
-                        ${createRotationSection()}
+            ${createRotationSection()}
             ${createShadowSection()}
             ${createBorderSection()}
-
-
           </div>
         </div>
 
