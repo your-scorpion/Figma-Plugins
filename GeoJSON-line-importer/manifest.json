@@ -1,0 +1,23 @@
+{
+  "name": "GeoJSON line importer",
+  "id": "1629427",
+  "api": "1.0.0",
+  "main": "code.js",
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma"
+  ],
+  "relaunchButtons": [
+    {
+      "command": "4b8603a0-2df8-49b6-82f2-ea93ab179898",
+      "name": "GeoJSON line importer"
+    }
+  ],
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ],
+    "reasoning": "The plugin reads files locally and makes no network requests."
+  }
+}

@@ -1,0 +1,920 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* Two-column card layout. Light palette by default; Figma adds
+       .figma-dark to <html> when themeColors is on. */
+    :root {
+      --canvas: #f2f2f2;
+      --card: #ffffff;
+      --card-border: rgba(0, 0, 0, .04);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 16px rgba(0, 0, 0, .04);
+      --text: #0d0d0d;
+      --text-2: #6b6b6b;
+      --text-3: #a3a3a3;
+      --line: #e8e8e8;
+      --field: #ffffff;
+      --field-border: #e6e6e6;
+      --seg-bg: #f5f5f5;
+      --hover: #f6f6f6;
+      --ink: #0d0d0d;
+      --on-ink: #ffffff;
+      --focus: #0d0d0d;
+      --accent-bg: #dcefd9;
+      --accent-glyph: #22c55e;
+      --danger: #d92d20;
+      --danger-bg: #fef1f0;
+      --success: #15803d;
+      --preview-bg: #f7f7f7;
+      --r-card: 18px;
+      --r-ctl: 10px;
+    }
+    html.figma-dark {
+      --canvas: #1a1a1a;
+      --card: #242424;
+      --card-border: rgba(255, 255, 255, .06);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+      --text: #f5f5f5;
+      --text-2: #a8a8a8;
+      --text-3: #6e6e6e;
+      --line: #333;
+      --field: #1e1e1e;
+      --field-border: #383838;
+      --seg-bg: #1c1c1c;
+      --hover: #2e2e2e;
+      --ink: #f5f5f5;
+      --on-ink: #0d0d0d;
+      --focus: #f5f5f5;
+      --accent-bg: #1f3320;
+      --danger: #ff7b6b;
+      --danger-bg: #3a1f1c;
+      --success: #4ade80;
+      --preview-bg: #1e1e1e;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--canvas); color: var(--text);
+      font: 12px/18px Inter, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; }
+    [hidden] { display: none !important; }
+
+    #plugin-root { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; padding: 12px; align-items: start; }
+    .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--r-card);
+      box-shadow: var(--shadow); padding: 18px; }
+    .card-head > div { min-width: 0; }
+    #source-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+    .card h2 { margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; letter-spacing: -.01em; }
+    .sub { margin: 2px 0 0; color: var(--text-2); }
+
+    .icon-btn { width: 28px; height: 28px; flex: none; display: grid; place-items: center; padding: 0;
+      border: 1px solid var(--field-border); border-radius: 8px; background: var(--card); cursor: pointer; color: var(--text); }
+    .icon-btn:hover { background: var(--hover); }
+
+    /* Drop zone */
+    #drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      height: 300px; border: 1.5px dashed var(--field-border); border-radius: 14px; color: var(--text-2);
+      cursor: pointer; text-align: center; transition: background .15s, border-color .15s; }
+    #drop:hover, #drop.over { background: var(--hover); border-color: var(--text-3); }
+    .nudge { animation: nudge-shake .45s cubic-bezier(.36,.07,.19,.97), nudge-glow 1.4s ease-out;
+      border-color: var(--focus) !important; }
+    @keyframes nudge-shake {
+      10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(3px); }
+      30%, 50%, 70% { transform: translateX(-5px); } 40%, 60% { transform: translateX(5px); }
+    }
+    @keyframes nudge-glow {
+      0%, 40% { box-shadow: 0 0 0 3px var(--focus); background: var(--hover); }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    @media (prefers-reduced-motion: reduce) { .nudge { animation: nudge-glow 1.4s ease-out; } }
+    #drop:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    #drop .glyph { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--seg-bg); color: var(--text); margin-bottom: 4px; }
+    #drop strong { color: var(--text); font-size: 13px; font-weight: 600; }
+    .formats { display: flex; gap: 6px; margin-top: 6px; }
+    .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border: 1px solid var(--field-border);
+      border-radius: 999px; background: var(--card); color: var(--text); font-size: 11px; font-weight: 500; }
+    #file { display: none; }
+
+    /* Loaded state */
+    #preview { display: block; width: 100%; height: 220px; border-radius: 12px; background: var(--preview-bg); cursor: crosshair; }
+    #stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+
+    .seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; gap: 3px; border: 1px solid var(--field-border);
+      border-radius: var(--r-ctl); background: var(--seg-bg); margin-bottom: 10px; }
+    .seg button { height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer; font-weight: 500; }
+    .seg button[aria-pressed=true] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px var(--card-border); }
+
+    .input { position: relative; display: flex; align-items: center; height: 38px; border: 1px solid var(--field-border);
+      border-radius: var(--r-ctl); background: var(--field); transition: border-color .1s; }
+    .input:hover { border-color: var(--text-3); }
+    .input:focus-within { border-color: var(--focus); }
+    .input input { flex: 1; min-width: 0; height: 100%; border: 0; padding: 0 12px; background: transparent;
+      color: var(--text); font: inherit; font-size: 13px; outline: none; }
+    .input input::placeholder { color: var(--text-3); }
+    .input .unit, .input .ico { padding-right: 12px; color: var(--text-3); pointer-events: none; }
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .list-bar { display: flex; align-items: center; justify-content: space-between; margin: 12px 0 4px; }
+    #pick-count { color: var(--text-2); }
+    .links { display: flex; gap: 2px; }
+    .link { border: 0; background: transparent; padding: 2px 6px; border-radius: 6px; color: var(--text-2); cursor: pointer; font-weight: 500; }
+    .link:hover { color: var(--text); background: var(--hover); }
+
+    #path-list { list-style: none; margin: 0 -6px; padding: 0; max-height: 236px; overflow-y: auto; }
+    #path-list li { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 12px; cursor: pointer; }
+    #path-list li:hover, #path-list li.hover { background: var(--hover); }
+    .thumb { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--seg-bg); color: var(--text); }
+    #path-list li.off .thumb { color: var(--text-3); }
+    .meta { flex: 1; min-width: 0; }
+    .meta b { display: block; font-size: 13px; font-weight: 500; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .meta span { display: block; color: var(--text-2); font-size: 11px; line-height: 16px; }
+    #path-list li.off .meta b { color: var(--text-2); }
+    .check { flex: none; width: 20px; height: 20px; color: var(--text); opacity: 0; transition: opacity .1s; }
+    #path-list li:not(.off) .check { opacity: 1; }
+    #path-list li:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+    #list-empty, #path-more { padding: 12px 6px 2px; color: var(--text-2); text-align: center; }
+
+    .error { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; border-radius: 12px;
+      background: var(--danger-bg); color: var(--danger); }
+
+    /* Settings */
+    .field-label { display: block; margin: 0 0 6px; font-weight: 500; }
+    .field + .field { margin-top: 14px; }
+    .hint { margin-top: 6px; color: var(--text-2); min-height: 18px; }
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 80px; gap: 8px; }
+    .grid2 > * { min-width: 0; }
+    .swatch { position: relative; flex: none; width: 20px; height: 20px; margin-left: 10px; border-radius: 6px; overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 8px 8px; }
+    .swatch span { position: absolute; inset: 0; }
+    .swatch input { position: absolute; inset: -6px; width: 32px; height: 32px; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+    #hex { text-transform: uppercase; padding-left: 8px; }
+    #stroke-sample { display: block; width: 100%; height: 36px; margin-top: 14px; border-radius: 10px; background: var(--preview-bg); }
+
+    /* Create card (accent) */
+    .accent { position: relative; overflow: hidden; background: var(--accent-bg); border-color: transparent; box-shadow: none; }
+    .accent .blob { position: absolute; right: -28px; top: -28px; width: 120px; height: 120px; pointer-events: none; }
+    .accent h2 { display: flex; align-items: center; gap: 8px; }
+    .accent .arrow { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--on-ink); }
+    .accent .sub { color: var(--text); opacity: .75; max-width: 220px; margin-bottom: 16px; }
+    .accent h2 { font-size: 18px; line-height: 24px; }
+    .accent { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px; }
+    .accent #status { margin-top: 6px; min-height: 0; }
+    .accent #status:empty { display: none; }
+    .accent .sub { margin: 12px auto 0; max-width: 240px; }
+    .accent .blob path { stroke-dasharray: 260; animation: blob-draw 6s ease-in-out infinite alternate; }
+    .accent .blob path + path { animation-delay: -3s; }
+    @keyframes blob-draw { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+    /* Create button: magnetic, green wipe on hover, shine sweep, arrow swap */
+    #create { position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; gap: 12px; height: 56px;
+      padding: 0 8px 0 24px; border: 0; border-radius: 999px; background: var(--ink); color: var(--on-ink);
+      font-weight: 700; font-size: 15px; letter-spacing: -.01em; cursor: pointer;
+      transform: translate(var(--mx, 0px), var(--my, 0px));
+      box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 10px 24px -8px rgba(0,0,0,.4);
+      transition: transform .5s cubic-bezier(.2,.9,.3,1.2), box-shadow .3s, color .45s cubic-bezier(.7,0,.2,1), opacity .2s; }
+    #create::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #22c55e;
+      transform: scaleX(0); transform-origin: right; transition: transform .55s cubic-bezier(.7,0,.2,1); }
+    #create::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; z-index: -1; pointer-events: none;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent); transform: skewX(-20deg);
+      animation: create-shine 3.2s ease-in-out infinite; }
+    @keyframes create-shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+    #create:hover:not(:disabled) { color: #052e14; box-shadow: 0 2px 4px rgba(0,0,0,.15), 0 18px 34px -10px rgba(34,197,94,.7); }
+    #create:hover:not(:disabled)::before { transform: scaleX(1); transform-origin: left; }
+    #create .go { position: relative; overflow: hidden; width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%;
+      background: #22c55e; color: #052e14; transition: background .45s, color .45s, transform .5s cubic-bezier(.2,.9,.3,1.2); }
+    #create .go svg { grid-area: 1 / 1; transition: transform .45s cubic-bezier(.7,0,.2,1); }
+    #create .go svg + svg { transform: translateX(-150%); }
+    #create:hover:not(:disabled) .go { background: var(--ink); color: #22c55e; transform: rotate(-45deg) scale(1.05); }
+    #create:hover:not(:disabled) .go svg:first-child { transform: translateX(150%); }
+    #create:hover:not(:disabled) .go svg + svg { transform: translateX(0); }
+    #create:active:not(:disabled) { transform: translate(var(--mx, 0px), var(--my, 0px)) scale(.96); transition-duration: .1s; }
+    #create:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+    #create:disabled { opacity: .45; cursor: progress; }
+    #create:disabled::after { animation-duration: 1s; }
+    #create kbd { font: 500 11px/1 Inter, system-ui, sans-serif; opacity: .55; }
+    @media (prefers-reduced-motion: reduce) {
+      #create, #create *, #create::before, #create::after, .accent .blob path { animation: none !important; transition: none !important; }
+    }
+    #status { margin-top: 10px; min-height: 18px; color: var(--text-2); }
+    #status.ok { color: var(--success); }
+    #status.err { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div id="plugin-root">
+    <!-- Left: source + path picker -->
+    <div class="col">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="source-title">Import geometry</h2>
+            <p class="sub" id="source-sub">GeoJSON, KMZ or Shapefile</p>
+          </div>
+          <button id="clear" class="icon-btn" type="button" title="Remove file" aria-label="Remove file" hidden>
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div id="drop" role="button" tabindex="0" aria-label="Choose a geometry file">
+          <div class="glyph">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 13V3.5m0 0L6.5 7M10 3.5L13.5 7M3.5 12.5v4h13v-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <strong>Drop a file here</strong>
+          <div>or click to browse</div>
+          <div class="formats"><span class="chip">.geojson</span><span class="chip">.kmz</span><span class="chip">.shp</span></div>
+        </div>
+        <input id="file" type="file" accept=".geojson,.json,.kmz,.shp,application/geo+json,application/json,application/vnd.google-earth.kmz">
+
+        <div id="loaded" hidden>
+          <canvas id="preview" title="Click a line to include or exclude it"></canvas>
+          <div id="stats"></div>
+          <div class="seg" role="group" aria-label="Filter paths">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="line" aria-pressed="false">Lines</button>
+            <button type="button" data-filter="polygon" aria-pressed="false">Polygons</button>
+          </div>
+          <div class="input">
+            <input id="search" type="text" placeholder="Search by name or number" spellcheck="false" aria-label="Search paths">
+            <svg class="ico" width="30" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div class="list-bar">
+            <span id="pick-count"></span>
+            <div class="links">
+              <button id="pick-all" class="link" type="button">All</button>
+              <button id="pick-none" class="link" type="button">None</button>
+              <button id="pick-invert" class="link" type="button">Invert</button>
+            </div>
+          </div>
+          <ul id="path-list" role="listbox" aria-multiselectable="true"></ul>
+          <div id="list-empty" hidden>No paths match your search</div>
+          <div id="path-more" hidden></div>
+        </div>
+
+        <div id="file-error" class="error" role="alert" hidden></div>
+      </div>
+    </div>
+
+    <!-- Right: settings + create -->
+    <div class="col">
+      <input id="maxSize" type="hidden" min="10" max="10000" value="800">
+      <div id="size-hint" hidden></div>
+
+      <div class="card">
+        <div class="card-head"><h2>Stroke</h2></div>
+        <div class="field">
+          <label class="field-label" for="hex">Color</label>
+          <div class="grid2">
+            <div class="input">
+              <label class="swatch" title="Pick color"><span id="swatch-fill"></span><input id="picker" type="color" value="#141C29"></label>
+              <input id="hex" type="text" maxlength="7" spellcheck="false" value="141C29" aria-label="Hex color">
+            </div>
+            <div class="input"><input id="alpha" type="number" min="0" max="100" step="1" value="100" aria-label="Opacity"><span class="unit">%</span></div>
+          </div>
+          <input id="strokeColor" type="hidden" value="#141C29FF">
+        </div>
+        <div class="field">
+          <label class="field-label" for="strokeWidth">Width</label>
+          <div class="input"><input id="strokeWidth" type="number" min="0.25" max="20" step="0.25" value="2"><span class="unit">px</span></div>
+        </div>
+        <canvas id="stroke-sample" aria-hidden="true"></canvas>
+      </div>
+
+      <div class="card accent">
+        <svg class="blob" viewBox="0 0 120 120" aria-hidden="true">
+          <path d="M20 90 C 30 40, 60 70, 70 30 S 110 20, 100 60" fill="none" stroke="var(--accent-glyph)" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+          <path d="M30 20 C 55 40, 40 80, 95 95" fill="none" stroke="var(--accent-glyph)" stroke-width="10" stroke-linecap="round" opacity=".35"/>
+        </svg>
+        <p class="sub" id="create-sub" hidden></p>
+        <button id="create" type="button"><span id="create-label">Create vectors</span><kbd>⌘↵</kbd><span class="go"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <div id="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id)
+
+    // ---- Panel height -> code.ts (iframe shrink-wraps content) ----
+    let lastHeight = 0
+    let raf = 0
+    function reportHeight() {
+      const h = Math.ceil($('plugin-root').getBoundingClientRect().height)
+      if (h && h !== lastHeight) {
+        lastHeight = h
+        parent.postMessage({ pluginMessage: { type: 'resize', height: h } }, '*')
+      }
+    }
+    new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(reportHeight) }).observe($('plugin-root'))
+
+    // ---- File parsing (GeoJSON / KMZ / SHP) ----
+    function collectGeoJsonPaths(value) {
+      const paths = []
+      const validPosition = (point) => Array.isArray(point) && point.length >= 2 && Number.isFinite(point[0]) && Number.isFinite(point[1])
+      const add = (points, closed) => {
+        if (!Array.isArray(points)) return
+        const clean = points.filter(validPosition).map((point) => [Number(point[0]), Number(point[1])])
+        if (clean.length >= 2) paths.push({ points: clean, closed })
+      }
+      const visit = (item) => {
+        if (!item || typeof item !== 'object') return
+        if (item.type === 'FeatureCollection' && Array.isArray(item.features)) return item.features.forEach(visit)
+        if (item.type === 'Feature') return visit(item.geometry)
+        if (item.type === 'GeometryCollection' && Array.isArray(item.geometries)) return item.geometries.forEach(visit)
+        const coordinates = item.coordinates
+        if (!Array.isArray(coordinates)) return
+        if (item.type === 'LineString') add(coordinates, false)
+        else if (item.type === 'MultiLineString') coordinates.forEach((line) => add(line, false))
+        else if (item.type === 'Polygon') coordinates.forEach((ring) => add(ring, true))
+        else if (item.type === 'MultiPolygon') coordinates.forEach((polygon) => Array.isArray(polygon) && polygon.forEach((ring) => add(ring, true)))
+      }
+      visit(value)
+      return paths
+    }
+
+    function parseKml(text) {
+      const documentXml = new DOMParser().parseFromString(text, 'application/xml')
+      if (documentXml.getElementsByTagName('parsererror').length) throw new Error('The KMZ contains invalid KML.')
+      const paths = []
+      const parseCoordinates = (textValue) => String(textValue || '').trim().split(/\s+/).map((tuple) => {
+        const values = tuple.split(',').map(Number)
+        return [values[0], values[1]]
+      }).filter((point) => Number.isFinite(point[0]) && Number.isFinite(point[1]))
+      Array.from(documentXml.getElementsByTagName('LineString')).forEach((line) => {
+        const coordinates = line.getElementsByTagName('coordinates')[0]
+        const points = parseCoordinates(coordinates && coordinates.textContent)
+        if (points.length >= 2) paths.push({ points, closed: false })
+      })
+      Array.from(documentXml.getElementsByTagName('LinearRing')).forEach((ring) => {
+        const coordinates = ring.getElementsByTagName('coordinates')[0]
+        const points = parseCoordinates(coordinates && coordinates.textContent)
+        if (points.length >= 2) paths.push({ points, closed: true })
+      })
+      Array.from(documentXml.getElementsByTagName('gx:Track')).forEach((track) => {
+        const points = Array.from(track.getElementsByTagName('gx:coord')).map((coord) => String(coord.textContent || '').trim().split(/\s+/).map(Number)).filter((point) => Number.isFinite(point[0]) && Number.isFinite(point[1])).map((point) => [point[0], point[1]])
+        if (points.length >= 2) paths.push({ points, closed: false })
+      })
+      return paths
+    }
+
+    async function unzipFirstKml(buffer) {
+      const bytes = new Uint8Array(buffer)
+      const view = new DataView(buffer)
+      let eocd = -1
+      for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i -= 1) {
+        if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break }
+      }
+      if (eocd < 0) throw new Error('This KMZ is not a valid ZIP archive.')
+      const entryCount = view.getUint16(eocd + 10, true)
+      let offset = view.getUint32(eocd + 16, true)
+      const decoder = new TextDecoder()
+      for (let index = 0; index < entryCount; index += 1) {
+        if (view.getUint32(offset, true) !== 0x02014b50) break
+        const compression = view.getUint16(offset + 10, true)
+        const compressedSize = view.getUint32(offset + 20, true)
+        const nameLength = view.getUint16(offset + 28, true)
+        const extraLength = view.getUint16(offset + 30, true)
+        const commentLength = view.getUint16(offset + 32, true)
+        const localOffset = view.getUint32(offset + 42, true)
+        const name = decoder.decode(bytes.slice(offset + 46, offset + 46 + nameLength))
+        if (/\.kml$/i.test(name)) {
+          const localNameLength = view.getUint16(localOffset + 26, true)
+          const localExtraLength = view.getUint16(localOffset + 28, true)
+          const dataOffset = localOffset + 30 + localNameLength + localExtraLength
+          const compressed = bytes.slice(dataOffset, dataOffset + compressedSize)
+          let output
+          if (compression === 0) output = compressed
+          else if (compression === 8 && typeof DecompressionStream !== 'undefined') {
+            const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+            output = new Uint8Array(await new Response(stream).arrayBuffer())
+          } else throw new Error('This KMZ uses an unsupported compression method.')
+          return decoder.decode(output)
+        }
+        offset += 46 + nameLength + extraLength + commentLength
+      }
+      throw new Error('No KML file was found inside this KMZ.')
+    }
+
+    function parseShapefile(buffer) {
+      const view = new DataView(buffer)
+      if (view.byteLength < 100 || view.getInt32(0, false) !== 9994) throw new Error('This is not a valid .shp file.')
+      const paths = []
+      let offset = 100
+      while (offset + 12 <= view.byteLength) {
+        const contentBytes = view.getInt32(offset + 4, false) * 2
+        const start = offset + 8
+        if (contentBytes < 4 || start + contentBytes > view.byteLength) break
+        const type = view.getInt32(start, true)
+        const supported = [3, 5, 13, 15, 23, 25].includes(type)
+        if (supported && contentBytes >= 44) {
+          const partCount = view.getInt32(start + 36, true)
+          const pointCount = view.getInt32(start + 40, true)
+          const partsOffset = start + 44
+          const pointsOffset = partsOffset + partCount * 4
+          if (partCount >= 1 && pointCount >= 2 && pointsOffset + pointCount * 16 <= start + contentBytes) {
+            const starts = []
+            for (let i = 0; i < partCount; i += 1) starts.push(view.getInt32(partsOffset + i * 4, true))
+            starts.push(pointCount)
+            for (let part = 0; part < partCount; part += 1) {
+              const points = []
+              for (let i = starts[part]; i < starts[part + 1]; i += 1) {
+                const pointOffset = pointsOffset + i * 16
+                const x = view.getFloat64(pointOffset, true)
+                const y = view.getFloat64(pointOffset + 8, true)
+                if (Number.isFinite(x) && Number.isFinite(y)) points.push([x, y])
+              }
+              if (points.length >= 2) paths.push({ points, closed: type === 5 || type === 15 || type === 25 })
+            }
+          }
+        }
+        offset = start + contentBytes
+      }
+      return paths
+    }
+
+    async function readGeometryFile(file) {
+      const extension = (file.name.split('.').pop() || '').toLowerCase()
+      let paths
+      let format
+      let geographic = true
+      if (extension === 'geojson' || extension === 'json') {
+        let value
+        try { value = JSON.parse(await file.text()) } catch { throw new Error('This file is not valid GeoJSON.') }
+        paths = collectGeoJsonPaths(value)
+        format = 'geojson'
+      } else if (extension === 'kmz') {
+        paths = parseKml(await unzipFirstKml(await file.arrayBuffer()))
+        format = 'kmz'
+      } else if (extension === 'shp') {
+        paths = parseShapefile(await file.arrayBuffer())
+        format = 'shp'
+        geographic = paths.every((path) => path.points.every((point) => Math.abs(point[0]) <= 180 && Math.abs(point[1]) <= 90))
+      } else throw new Error('Choose a .geojson, .json, .kmz, or .shp file.')
+      if (!paths.length) throw new Error('No supported line or polygon geometry was found.')
+      return { name: file.name, mimeType: file.type, size: file.size, format, paths, geographic }
+    }
+
+    // ---- Projection (mirrors code.ts) ----
+    function projectPosition(p) {
+      const lat = Math.max(-85.05112878, Math.min(85.05112878, p[1])) * Math.PI / 180
+      return { x: (p[0] + 180) / 360, y: (1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2 }
+    }
+    function planarPosition(p) { return { x: p[0], y: -p[1] } }
+
+    const fmt = (n) => n.toLocaleString('en-US')
+    const plural = (n, word) => `${fmt(n)} ${word}${n === 1 ? '' : 's'}`
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
+    const cssVar = (name, fb) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fb
+    const FORMAT_LABEL = { geojson: 'GeoJSON', kmz: 'KMZ', shp: 'Shapefile' }
+    const LIST_LIMIT = 500
+
+    let geometry = null   // parsed file; selected paths are sent to code.ts as params.geojson
+    let projected = null  // { paths: [{ closed, pts, minX, minY, maxX, maxY }], minX, minY, w, h }
+    let selected = []     // boolean per path
+    let rows = []         // <li> per path (index-aligned; only the first LIST_LIMIT exist)
+    let filter = 'all'
+    let hovered = -1
+    let busy = false
+
+    function project(file) {
+      const t = file.geographic ? projectPosition : planarPosition
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      const paths = file.paths.map((path) => {
+        const pts = path.points.map(t)
+        let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity
+        for (const q of pts) {
+          if (q.x < a) a = q.x; if (q.x > c) c = q.x
+          if (q.y < b) b = q.y; if (q.y > d) d = q.y
+        }
+        minX = Math.min(minX, a); minY = Math.min(minY, b); maxX = Math.max(maxX, c); maxY = Math.max(maxY, d)
+        return { closed: path.closed, pts, minX: a, minY: b, maxX: c, maxY: d }
+      })
+      return { paths, minX, minY, w: Math.max(maxX - minX, 1e-12), h: Math.max(maxY - minY, 1e-12) }
+    }
+
+    const pathLabel = (i) => `${geometry.paths[i].closed ? 'Polygon' : 'Line'} ${i + 1}`
+    const selectedCount = () => selected.reduce((n, s) => n + (s ? 1 : 0), 0)
+
+    // ---- Color: #strokeColor holds #RRGGBBAA; picker/hex/alpha edit it ----
+    function colorValue() {
+      const hex = String($('strokeColor').value || '#000000FF').replace('#', '')
+      const read = (i, fb) => { const n = parseInt(hex.slice(i, i + 2), 16); return Number.isFinite(n) ? n / 255 : fb }
+      return { r: read(0, 0), g: read(2, 0), b: read(4, 0), a: hex.length >= 8 ? read(6, 1) : 1 }
+    }
+    function colorCss(minAlpha) {
+      const c = colorValue()
+      return `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${Math.max(c.a, minAlpha)})`
+    }
+
+    // ---- Canvas helpers ----
+    function fitCanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1
+      const cw = canvas.clientWidth, ch = canvas.clientHeight
+      if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
+        canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr)
+      }
+      const ctx = canvas.getContext('2d')
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, cw, ch)
+      return { ctx, cw, ch }
+    }
+
+    // ---- Preview (click a path to toggle it) ----
+    let view = null // { s, ox, oy } in CSS pixels
+    function drawPreview() {
+      const canvas = $('preview')
+      const { ctx, cw, ch } = fitCanvas(canvas)
+      if (!projected || !cw) return
+      const pad = 14
+      const s = Math.min((cw - pad * 2) / projected.w, (ch - pad * 2) / projected.h)
+      view = { s, ox: (cw - projected.w * s) / 2, oy: (ch - projected.h * s) / 2 }
+      const trace = (path) => {
+        path.pts.forEach((q, i) => {
+          const x = view.ox + (q.x - projected.minX) * s
+          const y = view.oy + (q.y - projected.minY) * s
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
+        })
+        if (path.closed) ctx.closePath()
+      }
+      ctx.lineJoin = ctx.lineCap = 'round'
+      ctx.beginPath()
+      projected.paths.forEach((p, i) => { if (!selected[i]) trace(p) })
+      ctx.strokeStyle = cssVar('--text-3', '#a3a3a3')
+      ctx.globalAlpha = 0.55
+      ctx.lineWidth = 1
+      ctx.stroke()
+      ctx.globalAlpha = 1
+      ctx.beginPath()
+      projected.paths.forEach((p, i) => { if (selected[i]) trace(p) })
+      ctx.strokeStyle = colorCss(0.3)
+      ctx.lineWidth = 1.5
+      ctx.stroke()
+      if (hovered >= 0) {
+        ctx.beginPath()
+        trace(projected.paths[hovered])
+        ctx.strokeStyle = '#22c55e'
+        ctx.lineWidth = 3
+        ctx.stroke()
+      }
+    }
+
+    function drawStrokeSample() {
+      const { ctx, cw, ch } = fitCanvas($('stroke-sample'))
+      if (!cw) return
+      const w = clamp(Number($('strokeWidth').value) || 1, 0.25, 20)
+      ctx.strokeStyle = colorCss(0)
+      ctx.lineWidth = Math.min(w, ch - 8)
+      ctx.lineCap = ctx.lineJoin = 'round'
+      ctx.beginPath()
+      const steps = 48
+      for (let k = 0; k <= steps; k += 1) {
+        const x = 16 + (cw - 32) * k / steps
+        const y = ch / 2 + Math.sin(k / steps * Math.PI * 2.5) * (ch / 2 - 10)
+        k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)
+      }
+      ctx.stroke()
+    }
+
+    function hitTest(mx, my) {
+      if (!projected || !view) return -1
+      const { s, ox, oy } = view
+      const px = (mx - ox) / s + projected.minX, py = (my - oy) / s + projected.minY, t = 6 / s
+      let best = -1, bestD = t * t
+      projected.paths.forEach((p, i) => {
+        if (!matchesFilter(i)) return
+        if (px < p.minX - t || px > p.maxX + t || py < p.minY - t || py > p.maxY + t) return
+        const pts = p.pts, n = pts.length
+        for (let k = 0; k < n - 1 + (p.closed ? 1 : 0); k += 1) {
+          const a = pts[k], b = pts[(k + 1) % n]
+          const dx = b.x - a.x, dy = b.y - a.y
+          const len = dx * dx + dy * dy
+          const u = len ? clamp(((px - a.x) * dx + (py - a.y) * dy) / len, 0, 1) : 0
+          const ex = a.x + u * dx - px, ey = a.y + u * dy - py
+          const d = ex * ex + ey * ey
+          if (d < bestD) { bestD = d; best = i }
+        }
+      })
+      return best
+    }
+
+    function setHover(i) {
+      if (i === hovered) return
+      if (rows[hovered]) rows[hovered].classList.remove('hover')
+      hovered = i
+      if (rows[i]) rows[i].classList.add('hover')
+      $('preview').style.cursor = i >= 0 ? 'pointer' : 'crosshair'
+      drawPreview()
+    }
+
+    const previewPoint = (e) => { const r = $('preview').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top] }
+    $('preview').addEventListener('mousemove', (e) => setHover(hitTest(...previewPoint(e))))
+    $('preview').addEventListener('mouseleave', () => setHover(-1))
+    $('preview').addEventListener('click', (e) => {
+      const i = hitTest(...previewPoint(e))
+      if (i < 0) return
+      toggle(i, !selected[i])
+      if (rows[i]) rows[i].scrollIntoView({ block: 'nearest' })
+    })
+    window.addEventListener('resize', () => { drawPreview(); drawStrokeSample() })
+
+    // ---- Path list ----
+    // Row thumbnail: the path itself, normalised into a 20×20 box (≤ 40 vertices).
+    function thumbSvg(i) {
+      const p = projected.paths[i]
+      const w = Math.max(p.maxX - p.minX, 1e-12), h = Math.max(p.maxY - p.minY, 1e-12)
+      const k = 16 / Math.max(w, h)
+      const ox = 2 + (16 - w * k) / 2, oy = 2 + (16 - h * k) / 2
+      const step = Math.max(1, Math.ceil(p.pts.length / 40))
+      const pts = p.pts.filter((_, j) => j % step === 0 || j === p.pts.length - 1)
+      const d = pts.map((q, j) => `${j ? 'L' : 'M'}${(ox + (q.x - p.minX) * k).toFixed(1)} ${(oy + (q.y - p.minY) * k).toFixed(1)}`).join('') + (p.closed ? 'Z' : '')
+      return `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    }
+    const CHECK = '<svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+
+    function buildList() {
+      const list = $('path-list')
+      list.textContent = ''
+      rows = []
+      if (!geometry) return
+      const n = Math.min(geometry.paths.length, LIST_LIMIT)
+      const frag = document.createDocumentFragment()
+      for (let i = 0; i < n; i += 1) {
+        const li = document.createElement('li')
+        li.dataset.i = i
+        li.tabIndex = 0
+        li.setAttribute('role', 'option')
+        li.innerHTML = `<span class="thumb">${thumbSvg(i)}</span><span class="meta"><b></b><span></span></span>${CHECK}`
+        li.querySelector('b').textContent = pathLabel(i)
+        li.querySelector('.meta span').textContent = `${geometry.paths[i].closed ? 'Closed ring' : 'Open line'} · ${plural(geometry.paths[i].points.length, 'point')}`
+        rows.push(li)
+        frag.appendChild(li)
+      }
+      list.appendChild(frag)
+      syncRows()
+      applyFilter()
+    }
+
+    function syncRows() {
+      rows.forEach((li, i) => {
+        li.classList.toggle('off', !selected[i])
+        li.setAttribute('aria-selected', String(!!selected[i]))
+      })
+    }
+
+    function matchesFilter(i) {
+      const closed = geometry.paths[i].closed
+      if (filter === 'line' && closed) return false
+      if (filter === 'polygon' && !closed) return false
+      const q = $('search').value.trim().toLowerCase()
+      return !q || pathLabel(i).toLowerCase().includes(q) || String(i + 1) === q
+    }
+
+    function applyFilter() {
+      if (!geometry) return
+      let visible = 0
+      rows.forEach((li, i) => { const m = matchesFilter(i); li.hidden = !m; if (m) visible += 1 })
+      let beyond = 0
+      for (let i = rows.length; i < geometry.paths.length; i += 1) if (matchesFilter(i)) beyond += 1
+      $('list-empty').hidden = visible + beyond > 0
+      $('path-more').hidden = beyond === 0
+      $('path-more').textContent = `+ ${fmt(beyond)} more — pick them on the preview`
+    }
+
+    $('path-list').addEventListener('click', (e) => {
+      const li = e.target.closest('li')
+      if (li) toggle(Number(li.dataset.i), !selected[Number(li.dataset.i)])
+    })
+    $('path-list').addEventListener('keydown', (e) => {
+      const li = e.target.closest('li')
+      if (li && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); toggle(Number(li.dataset.i), !selected[Number(li.dataset.i)]) }
+    })
+    $('path-list').addEventListener('mouseover', (e) => { const li = e.target.closest('li'); if (li) setHover(Number(li.dataset.i)) })
+    $('path-list').addEventListener('mouseleave', () => setHover(-1))
+
+    document.querySelectorAll('.seg button').forEach((btn) => btn.addEventListener('click', () => {
+      filter = btn.dataset.filter
+      document.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)))
+      applyFilter()
+    }))
+    $('search').addEventListener('input', applyFilter)
+
+    function toggle(i, value) {
+      selected[i] = value
+      syncRows()
+      onSelectionChanged()
+    }
+    // Bulk actions apply to the paths matching the current filter/search.
+    function setVisible(fn) {
+      selected = selected.map((s, i) => (matchesFilter(i) ? fn(s) : s))
+      syncRows()
+      onSelectionChanged()
+    }
+    $('pick-all').addEventListener('click', () => setVisible(() => true))
+    $('pick-none').addEventListener('click', () => setVisible(() => false))
+    $('pick-invert').addEventListener('click', () => setVisible((s) => !s))
+
+    function onSelectionChanged() {
+      $('pick-count').textContent = `${fmt(selectedCount())} of ${fmt(selected.length)} selected`
+      drawPreview(); renderSizeHint(); renderCreate()
+    }
+
+    // ---- Summary, size hint, create card ----
+    function renderSource() {
+      $('drop').hidden = !!geometry
+      $('loaded').hidden = !geometry
+      $('clear').hidden = !geometry
+      if (!geometry) {
+        $('source-title').textContent = 'Import geometry'
+        $('source-sub').textContent = 'GeoJSON, KMZ or Shapefile'
+        return
+      }
+      const closed = geometry.paths.filter((p) => p.closed).length
+      const open = geometry.paths.length - closed
+      const points = geometry.paths.reduce((sum, p) => sum + p.points.length, 0)
+      $('source-title').textContent = geometry.name
+      $('source-title').title = geometry.name
+      $('source-sub').textContent = `${FORMAT_LABEL[geometry.format] || geometry.format} · ${geometry.geographic ? 'Web Mercator' : 'Planar'}`
+      const chips = []
+      if (open) chips.push(plural(open, 'line'))
+      if (closed) chips.push(plural(closed, 'polygon ring'))
+      chips.push(plural(points, 'point'))
+      $('stats').innerHTML = ''
+      for (const text of chips) { const c = document.createElement('span'); c.className = 'chip'; c.textContent = text; $('stats').appendChild(c) }
+      buildList()
+      onSelectionChanged()
+    }
+
+    let outputSize = null
+    // Output bounds come from the selected paths only (code.ts fits those).
+    function renderSizeHint() {
+      const max = Number($('maxSize').value)
+      let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity
+      if (projected) projected.paths.forEach((p, i) => {
+        if (!selected[i]) return
+        a = Math.min(a, p.minX); b = Math.min(b, p.minY); c = Math.max(c, p.maxX); d = Math.max(d, p.maxY)
+      })
+      outputSize = null
+      if (c >= a && max > 0) {
+        const w = Math.max(c - a, 1e-12), h = Math.max(d - b, 1e-12)
+        const k = max / Math.max(w, h)
+        outputSize = `${fmt(Math.max(1, Math.round(w * k)))} × ${fmt(Math.max(1, Math.round(h * k)))} px`
+      }
+      $('size-hint').textContent = outputSize ? `Frame will be ≈ ${outputSize}` : 'Longest edge of the new frame'
+      renderCreate()
+    }
+
+    function renderCreate() {
+      const btn = $('create')
+      const label = $('create-label')
+      const n = selectedCount()
+      btn.disabled = busy
+      if (busy) label.textContent = 'Creating…'
+      else if (!geometry || n === 0) label.textContent = 'Create vectors'
+      else label.textContent = `Create ${plural(n, 'vector')}`
+      $('create-sub').hidden = !geometry
+      $('create-sub').textContent = !geometry
+        ? ''
+        : n === 0
+          ? 'Select at least one path on the left.'
+          : `${plural(n, 'editable vector')} in a new ${outputSize || ''} frame at the viewport centre.`
+    }
+
+    function setStatus(text, kind) {
+      const el = $('status')
+      el.textContent = text || ''
+      el.className = kind || ''
+    }
+
+    // ---- File input ----
+    async function handleFile(file) {
+      const err = $('file-error')
+      err.hidden = true
+      setStatus('')
+      geometry = projected = null
+      selected = []
+      hovered = -1
+      filter = 'all'
+      $('search').value = ''
+      document.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === 'all')))
+      if (file) {
+        try {
+          geometry = await readGeometryFile(file)
+          projected = project(geometry)
+          selected = geometry.paths.map(() => true)
+        } catch (error) {
+          console.error('Could not read file:', error)
+          geometry = projected = null
+          err.textContent = error instanceof Error ? error.message : String(error)
+          err.hidden = false
+        }
+      }
+      renderSource(); renderSizeHint(); renderCreate()
+    }
+    $('file').addEventListener('change', (e) => { handleFile(e.target.files[0]); e.target.value = '' })
+    $('drop').addEventListener('click', () => $('file').click())
+    $('drop').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click() } })
+    $('clear').addEventListener('click', () => handleFile(null))
+    for (const ev of ['dragenter', 'dragover']) document.addEventListener(ev, (e) => { e.preventDefault(); $('drop').classList.add('over') })
+    for (const ev of ['dragleave', 'drop']) document.addEventListener(ev, (e) => { e.preventDefault(); if (ev === 'drop' || !e.relatedTarget) $('drop').classList.remove('over') })
+    document.addEventListener('drop', (e) => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) handleFile(f) })
+
+    // ---- Color controls ----
+    function syncColorControls() {
+      const rgb = $('strokeColor').value.toUpperCase().slice(0, 7)
+      const alpha = Math.round(colorValue().a * 100)
+      $('picker').value = rgb.toLowerCase()
+      if (document.activeElement !== $('hex')) $('hex').value = rgb.slice(1)
+      if (document.activeElement !== $('alpha')) $('alpha').value = alpha
+      $('swatch-fill').style.background = rgb
+      $('swatch-fill').style.opacity = alpha / 100
+      drawPreview(); drawStrokeSample()
+    }
+    function setColor(rgbHex, alphaPct) {
+      const a = Math.round(clamp(alphaPct, 0, 100) * 2.55).toString(16).padStart(2, '0')
+      $('strokeColor').value = ('#' + rgbHex.replace('#', '') + a).toUpperCase()
+      syncColorControls()
+    }
+    const currentAlpha = () => Math.round(colorValue().a * 100)
+    $('picker').addEventListener('input', (e) => setColor(e.target.value, currentAlpha()))
+    $('hex').addEventListener('input', (e) => {
+      let v = e.target.value.replace(/[^0-9a-f]/gi, '')
+      if (v.length === 3) v = v.replace(/./g, '$&$&')
+      if (v.length === 6) setColor(v, currentAlpha())
+    })
+    $('hex').addEventListener('blur', syncColorControls)
+    $('alpha').addEventListener('input', (e) => { const n = Number(e.target.value); if (Number.isFinite(n)) setColor($('strokeColor').value.slice(0, 7), n) })
+    $('alpha').addEventListener('blur', syncColorControls)
+
+    // Clamp number fields on blur so the value sent matches what is shown.
+    for (const id of ['maxSize', 'strokeWidth']) {
+      const el = $(id)
+      el.addEventListener('blur', () => {
+        const n = Number(el.value)
+        el.value = Number.isFinite(n) ? clamp(n, Number(el.min), Number(el.max)) : el.defaultValue
+        renderSizeHint(); drawStrokeSample()
+      })
+    }
+    $('maxSize').addEventListener('input', renderSizeHint)
+    $('strokeWidth').addEventListener('input', drawStrokeSample)
+
+    // ---- Messaging with code.ts ----
+    function currentParams() {
+      return {
+        geojson: geometry && {
+          ...geometry,
+          paths: geometry.paths
+            .map((p, i) => ({ ...p, label: pathLabel(i) }))
+            .filter((_, i) => selected[i]),
+        },
+        maxSize: Number($('maxSize').value),
+        strokeWidth: Number($('strokeWidth').value),
+        strokeColor: colorValue(),
+      }
+    }
+    // Shake + highlight the element the user needs to act on first.
+    function nudge(el) {
+      el.classList.remove('nudge')
+      void el.offsetWidth // restart the animation
+      el.classList.add('nudge')
+      el.addEventListener('animationend', () => el.classList.remove('nudge'), { once: true })
+      if (el.id === 'drop') el.focus({ preventScroll: true })
+    }
+    // Magnetic pull toward the cursor.
+    $('create').addEventListener('pointermove', (e) => {
+      const btn = e.currentTarget, r = btn.getBoundingClientRect()
+      btn.style.setProperty('--mx', `${((e.clientX - r.left) / r.width - .5) * 10}px`)
+      btn.style.setProperty('--my', `${((e.clientY - r.top) / r.height - .5) * 8}px`)
+    })
+    $('create').addEventListener('pointerleave', (e) => { e.currentTarget.style.removeProperty('--mx'); e.currentTarget.style.removeProperty('--my') })
+    $('create').addEventListener('click', () => {
+      if (busy) return
+      if (!geometry) return nudge($('drop'))
+      if (!selectedCount()) return nudge($('path-list'))
+      busy = true
+      setStatus('')
+      renderCreate()
+      parent.postMessage({ pluginMessage: { type: 'action', id: 'import', params: currentParams() } }, '*')
+    })
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('create').click()
+    })
+
+    window.onmessage = (event) => {
+      const msg = event.data && event.data.pluginMessage
+      if (!msg) return
+      if (msg.type === 'import-result') {
+        busy = false
+        renderCreate()
+        if (msg.ok) setStatus(`✓ Created ${plural(msg.count, 'vector')}`, 'ok')
+        else setStatus(msg.error || 'Import failed', 'err')
+      }
+    }
+
+    syncColorControls()
+    renderSource(); renderSizeHint(); renderCreate()
+  </script>
+</body>
+</html>
